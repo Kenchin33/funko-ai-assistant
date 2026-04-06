@@ -14,6 +14,10 @@ class FAQEntry(Base):
     question: Mapped[str] = mapped_column(String(500), nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     keywords: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    button_label: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    button_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+
     priority: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
