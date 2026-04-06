@@ -1,4 +1,9 @@
-from app.schemas.chat import ChatMessageRead, ChatSessionCreate, ChatSessionRead
+from app.schemas.chat import (
+    ChatMessageCreate,
+    ChatMessageRead,
+    ChatSessionCreate,
+    ChatSessionRead,
+)
 from app.schemas.faq import FAQCreate, FAQRead, FAQUpdate
 
 __all__ = [
@@ -7,5 +12,6 @@ __all__ = [
     "FAQUpdate",
     "ChatSessionCreate",
     "ChatSessionRead",
+    "ChatMessageCreate",
     "ChatMessageRead",
 ]

@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class ChatSessionCreate(BaseModel):
     user_name: str | None = None
-    user_email: str | None = None
+    user_email: EmailStr | None = None
     source: str | None = None
 
 
@@ -21,10 +22,17 @@ class ChatSessionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ChatMessageCreate(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    message_text: str
+    detected_intent: str | None = None
+    metadata_json: dict | None = None
+
+
 class ChatMessageRead(BaseModel):
     id: int
     session_id: int
-    role: str
+    role: Literal["user", "assistant", "system"]
     message_text: str
     detected_intent: str | None = None
     metadata_json: dict | None = None
