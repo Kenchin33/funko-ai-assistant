@@ -21,6 +21,11 @@ def list_faqs(db: Session = Depends(get_db)):
     return FAQService.get_all(db)
 
 
+@router.get("/admin/all", response_model=list[FAQRead])
+def list_all_faqs_admin(db: Session = Depends(get_db)):
+    return FAQService.get_all_admin(db)
+
+
 @router.get("/{faq_id}", response_model=FAQRead)
 def get_faq(faq_id: int, db: Session = Depends(get_db)):
     faq = FAQService.get_by_id(db, faq_id)

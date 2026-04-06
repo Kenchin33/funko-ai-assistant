@@ -16,6 +16,15 @@ class FAQService:
 
     @staticmethod
     def get_all(db: Session) -> list[FAQEntry]:
+        stmt = (
+            select(FAQEntry)
+            .where(FAQEntry.is_active.is_(True))
+            .order_by(FAQEntry.priority.desc(), FAQEntry.id.asc())
+        )
+        return list(db.scalars(stmt).all())
+
+    @staticmethod
+    def get_all_admin(db: Session) -> list[FAQEntry]:
         stmt = select(FAQEntry).order_by(FAQEntry.priority.desc(), FAQEntry.id.asc())
         return list(db.scalars(stmt).all())
 
