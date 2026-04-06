@@ -5,9 +5,12 @@ from app.api.dependencies import get_db
 from app.schemas.chat import (
     ChatMessageCreate,
     ChatMessageRead,
+    ChatReplyResponse,
     ChatSessionCreate,
     ChatSessionRead,
+    UserChatMessageRequest,
 )
+from app.services.chat_reply_service import ChatReplyService
 from app.services.chat_service import ChatService
 
 router = APIRouter(prefix="/chat")
@@ -68,3 +71,27 @@ def get_chat_messages(
         )
 
     return ChatService.get_messages_by_session_id(db, session_id)
+
+
+@router.post(
+    "/sessions/{session_id}/reply",
+    response_model=ChatReplyResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_chat_reply(
+    session_id: int,
+    payload: UserChatMessageRequest,
+    db: Session = Depends(get_db),
+):
+    session = ChatService.get_session_by_id(db, session_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found",
+        )
+
+    return ChatReplyService.process_user_message(
+        db=db,
+        session_id=session_id,
+        message_text=payload.message_text,
+    )

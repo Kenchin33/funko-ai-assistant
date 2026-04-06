@@ -1,6 +1,8 @@
 from app.schemas.chat import (
     ChatMessageCreate,
     ChatMessageRead,
+    ChatReplyAction,
+    ChatReplyResponse,
     ChatSessionCreate,
     ChatSessionRead,
 )
@@ -14,4 +16,6 @@ __all__ = [
     "ChatSessionRead",
     "ChatMessageCreate",
     "ChatMessageRead",
+    "ChatReplyAction",
+    "ChatReplyResponse",
 ]

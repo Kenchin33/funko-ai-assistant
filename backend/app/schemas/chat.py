@@ -39,3 +39,22 @@ class ChatMessageRead(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserChatMessageRequest(BaseModel):
+    message_text: str
+
+
+class ChatReplyAction(BaseModel):
+    type: str
+    label: str
+    url: str
+
+
+class ChatReplyResponse(BaseModel):
+    session_id: int
+    user_message: ChatMessageRead
+    assistant_message: ChatMessageRead
+    matched_faq_id: int | None = None
+    matched_intent: str
+    actions: list[ChatReplyAction] = []
