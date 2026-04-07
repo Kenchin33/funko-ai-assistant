@@ -5,68 +5,139 @@ from app.core.config import settings
 
 class LLMService:
     def __init__(self):
-        self.api_key = settings.GEMINI_API_KEY
-        self.model = settings.GEMINI_MODEL
-        self.url = (
+        self.gemini_api_key = settings.GEMINI_API_KEY
+        self.gemini_model = settings.GEMINI_MODEL
+        self.gemini_url = (
             f"https://generativelanguage.googleapis.com/v1/models/"
-            f"{self.model}:generateContent?key={self.api_key}"
+            f"{self.gemini_model}:generateContent?key={self.gemini_api_key}"
         )
 
-    def generate_reply(self, user_message: str) -> str:
-        system_prompt = (
+        self.openrouter_api_key = settings.OPENROUTER_API_KEY
+        self.openrouter_model = settings.OPENROUTER_MODEL
+        self.openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
+
+    def _build_system_prompt(self) -> str:
+        return (
             "Ти AI-асистент інтернет-магазину колекційних фігурок Funko Pop. "
-            "Назва магазину - Funko Hunter"
-            "Відповідай лише по темі магазину: товари, доставка, оплата, передзамовлення, наявність, поради покупцю. "
-            "Якщо питання не стосується магазину, ввічливо скажи, що можеш допомогти лише з питаннями магазину. "
+            "Відповідай лише по темі магазину: товари, доставка, оплата, "
+            "передзамовлення, наявність, поради покупцю. "
+            "Якщо питання не стосується магазину, ввічливо скажи, що можеш "
+            "допомогти лише з питаннями магазину. "
+            "Не вигадуй наявність товарів, якщо не маєш точних даних. "
             "Відповідай коротко, корисно і українською мовою."
-            "Стан коробок дуже важливий. Якщо у фігурки пошкоджена коробка це завжди вказано"
         )
 
+    def _smart_text_fallback(self) -> str:
+        return (
+            "Зараз AI-асистент тимчасово недоступний 😔\n\n"
+            "Але я все ще можу допомогти з:\n"
+            "• доставкою\n"
+            "• оплатою\n"
+            "• наявністю товарів\n"
+            "• передзамовленням\n\n"
+            "Оберіть категорію в меню вище або спробуйте ще раз трохи пізніше."
+        )
+
+    def _try_gemini(self, user_message: str) -> str | None:
+        system_prompt = self._build_system_prompt()
         full_prompt = f"{system_prompt}\n\nКористувач: {user_message}"
 
         try:
             response = requests.post(
-                self.url,
+                self.gemini_url,
                 json={
                     "contents": [
                         {
-                            "parts": [
-                                {"text": full_prompt}
-                            ]
+                            "parts": [{"text": full_prompt}]
                         }
                     ]
                 },
                 timeout=20,
             )
 
+            print("GEMINI STATUS:", response.status_code)
+            print("GEMINI BODY:", response.text)
+
             if response.status_code != 200:
-                print("LLM ERROR STATUS:", response.status_code)
-                print("LLM ERROR BODY:", response.text)
-                return "Зараз AI-відповідь тимчасово недоступна. Спробуйте ще раз трохи пізніше."
+                return None
 
             data = response.json()
-
             candidates = data.get("candidates", [])
             if not candidates:
-                print("LLM EMPTY RESPONSE:", data)
-                return "Не вдалося отримати відповідь від AI."
+                return None
 
             content = candidates[0].get("content", {})
             parts = content.get("parts", [])
             if not parts:
-                print("LLM EMPTY PARTS:", data)
-                return "Не вдалося отримати текст відповіді від AI."
+                return None
 
             text = parts[0].get("text", "").strip()
-            if not text:
-                print("LLM EMPTY TEXT:", data)
-                return "AI не повернув текст відповіді."
-
-            return text
+            return text or None
 
         except requests.RequestException as e:
-            print("LLM REQUEST ERROR:", e)
-            return "Помилка з'єднання з AI-сервісом."
+            print("GEMINI REQUEST ERROR:", e)
+            return None
         except Exception as e:
-            print("LLM UNKNOWN ERROR:", e)
-            return "Виникла помилка при генерації відповіді."
+            print("GEMINI UNKNOWN ERROR:", e)
+            return None
+
+    def _try_openrouter(self, user_message: str) -> str | None:
+        if not self.openrouter_api_key:
+            return None
+
+        try:
+            response = requests.post(
+                self.openrouter_url,
+                headers={
+                    "Authorization": f"Bearer {self.openrouter_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.openrouter_model,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": self._build_system_prompt(),
+                        },
+                        {
+                            "role": "user",
+                            "content": user_message,
+                        },
+                    ],
+                },
+                timeout=20,
+            )
+
+            print("OPENROUTER STATUS:", response.status_code)
+            print("OPENROUTER BODY:", response.text)
+
+            if response.status_code != 200:
+                return None
+
+            data = response.json()
+            choices = data.get("choices", [])
+            if not choices:
+                return None
+
+            message = choices[0].get("message", {})
+            text = message.get("content", "")
+            text = text.strip() if isinstance(text, str) else ""
+            return text or None
+
+        except requests.RequestException as e:
+            print("OPENROUTER REQUEST ERROR:", e)
+            return None
+        except Exception as e:
+            print("OPENROUTER UNKNOWN ERROR:", e)
+            return None
+
+    def generate_reply(self, user_message: str) -> tuple[str, str]:
+        gemini_reply = self._try_gemini(user_message)
+        if gemini_reply:
+            return gemini_reply, "gemini"
+
+        openrouter_reply = self._try_openrouter(user_message)
+        if openrouter_reply:
+            return openrouter_reply, "openrouter"
+
+        return self._smart_text_fallback(), "fallback"

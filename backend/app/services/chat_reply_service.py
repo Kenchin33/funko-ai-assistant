@@ -140,7 +140,7 @@ class ChatReplyService:
         # ---------------- LLM DIRECT ----------------
         if intent == IntentType.LLM:
             llm = LLMService()
-            ai_text = llm.generate_reply(message_text)
+            ai_text, provider = llm.generate_reply(message_text)
 
             assistant_message = ChatService.create_message(
                 db=db,
@@ -150,7 +150,7 @@ class ChatReplyService:
                     message_text=ai_text,
                     detected_intent="llm_fallback",
                     metadata_json={
-                        "model": "gemini",
+                        "model": provider,
                     },
                 ),
             )

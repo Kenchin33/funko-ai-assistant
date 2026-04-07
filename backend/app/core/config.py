@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     GEMINI_MODEL: str = "gemini-2.5-flash"
 
+    OPENROUTER_API_KEY: str | None = None
+    OPENROUTER_MODEL: str = "openrouter/free"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
