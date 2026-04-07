@@ -73,6 +73,67 @@ input {
   cursor: not-allowed;
 }
 
+.submenu-wrap {
+  padding: 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #ede9fe;
+}
+
+.submenu-topbar {
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.question-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-card {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid #e9d5ff;
+  background: #faf5ff;
+  color: #3b0764;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.question-card:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
+  background: #f3e8ff;
+  border-color: #c084fc;
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.12);
+}
+
+.question-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.question-card-icon {
+  flex-shrink: 0;
+  color: #7c3aed;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.question-card-text {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .chat-body {
   height: 430px;
   overflow-y: auto;
@@ -94,6 +155,8 @@ input {
 
 .message-row {
   display: flex;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .message-row.user {
@@ -102,6 +165,30 @@ input {
 
 .message-row.assistant {
   justify-content: flex-start;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.avatar-bot {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #ddd6fe;
+}
+
+.avatar-user {
+  background: #ddd6fe;
+  color: #4c1d95;
+  border: 1px solid #c4b5fd;
 }
 
 .message-bubble {
@@ -205,15 +292,4 @@ input {
   margin: 10px 4px 0;
   font-size: 13px;
   color: #dc2626;
-}
-
-.back-btn {
-  background: #f3e8ff;
-  color: #6b21a8;
-}
-
-.question-btn {
-  width: 100%;
-  text-align: left;
-  padding: 14px 18px;
 }

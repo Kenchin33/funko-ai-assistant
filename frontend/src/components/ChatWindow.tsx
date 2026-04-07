@@ -85,25 +85,30 @@ export default function ChatWindow() {
       const items = groupedFaq[selectedCategory] || [];
 
       return (
-        <div className="quick-actions">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="quick-action-btn back-btn"
-            disabled={loading}
-          >
-            ← Назад
-          </button>
-
-          {items.map((item) => (
+        <div className="submenu-wrap">
+          <div className="submenu-topbar">
             <button
-              key={item.id}
-              onClick={() => handleSend(item.question)}
-              className="quick-action-btn question-btn"
-              disabled={loading || !sessionId}
+              onClick={() => setSelectedCategory(null)}
+              className="quick-action-btn back-btn"
+              disabled={loading}
             >
-              {item.question}
+              ← Назад
             </button>
-          ))}
+          </div>
+
+          <div className="question-cards">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleSend(item.question)}
+                className="question-card"
+                disabled={loading || !sessionId}
+              >
+                <span className="question-card-icon">✦</span>
+                <span className="question-card-text">{item.question}</span>
+              </button>
+            ))}
+          </div>
         </div>
       );
     }
