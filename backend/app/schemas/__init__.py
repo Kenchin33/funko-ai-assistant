@@ -5,8 +5,10 @@ from app.schemas.chat import (
     ChatReplyResponse,
     ChatSessionCreate,
     ChatSessionRead,
+    UserChatMessageRequest,
 )
 from app.schemas.faq import FAQCreate, FAQRead, FAQUpdate
+from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
 
 __all__ = [
     "FAQCreate",
@@ -18,4 +20,8 @@ __all__ = [
     "ChatMessageRead",
     "ChatReplyAction",
     "ChatReplyResponse",
+    "UserChatMessageRequest",
+    "ProductCreate",
+    "ProductRead",
+    "ProductUpdate",
 ]
