@@ -78,6 +78,7 @@ export default function ChatWindow() {
       ]);
 
       setActions(res.actions || []);
+      setSelectedCategory(null);
     } catch (err) {
       console.error("Send message error:", err);
       setError("Не вдалося отримати відповідь від сервера.");
