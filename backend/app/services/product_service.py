@@ -47,29 +47,82 @@ class ProductService:
         db.commit()
 
     @staticmethod
+    def _clean_search_query(query: str) -> str:
+        normalized = normalize_text(query)
+
+        noise_phrases = [
+            "які є фігурки по",
+            "які є по",
+            "що є по",
+            "покажи",
+            "знайди",
+            "які є",
+            "що є",
+            "є",
+            "чи є",
+            "funko pop",
+            "фігурки",
+            "фігурка",
+        ]
+
+        cleaned = normalized
+        for phrase in noise_phrases:
+            cleaned = cleaned.replace(phrase, " ")
+
+        cleaned = " ".join(cleaned.split())
+        return cleaned
+
+    @staticmethod
     def search(db: Session, query: str) -> list[Product]:
-        normalized_query = normalize_text(query)
-        like_query = f"%{normalized_query}%"
+        cleaned_query = ProductService._clean_search_query(query)
+
+        if not cleaned_query:
+            return []
 
         stmt = (
             select(Product)
-            .where(
-                Product.is_active.is_(True),
-                or_(
-                    Product.title.ilike(like_query),
-                    Product.sku.ilike(like_query),
-                    Product.character_name.ilike(like_query),
-                    Product.franchise.ilike(like_query),
-                    Product.series.ilike(like_query),
-                ),
-            )
+            .where(Product.is_active.is_(True))
             .order_by(Product.in_stock.desc(), Product.id.asc())
         )
-        return list(db.scalars(stmt).all())
+        products = list(db.scalars(stmt).all())
+
+        query_tokens = set(cleaned_query.split())
+        matched_products: list[tuple[int, Product]] = []
+
+        for product in products:
+            searchable_text = normalize_text(
+                " ".join(
+                    [
+                        product.title or "",
+                        product.sku or "",
+                        product.character_name or "",
+                        product.franchise or "",
+                        product.series or "",
+                    ]
+                )
+            )
+
+            score = 0
+
+            if cleaned_query in searchable_text:
+                score += 50
+
+            for token in query_tokens:
+                if token in searchable_text:
+                    score += 15
+
+            if score > 0:
+                matched_products.append((score, product))
+
+        matched_products.sort(key=lambda item: (-item[0], not item[1].in_stock, item[1].id))
+        return [product for _, product in matched_products]
 
     @staticmethod
     def exact_lookup(db: Session, query: str) -> Product | None:
-        normalized_query = normalize_text(query)
+        cleaned_query = ProductService._clean_search_query(query)
+
+        if not cleaned_query:
+            return None
 
         stmt = (
             select(Product)
@@ -82,13 +135,19 @@ class ProductService:
         for product in products:
             title = normalize_text(product.title or "")
             sku = normalize_text(product.sku or "")
-            combined = normalize_text(f"{product.title or ''} {product.sku or ''}")
+            character_name = normalize_text(product.character_name or "")
+            combined_title_sku = normalize_text(f"{product.title or ''} {product.sku or ''}")
+            combined_character_sku = normalize_text(f"{product.character_name or ''} {product.sku or ''}")
 
-            if normalized_query == title:
+            if cleaned_query == title:
                 return product
-            if sku and normalized_query == sku:
+            if sku and cleaned_query == sku:
                 return product
-            if normalized_query == combined:
+            if cleaned_query == combined_title_sku:
+                return product
+            if character_name and cleaned_query == character_name:
+                return product
+            if combined_character_sku and cleaned_query == combined_character_sku:
                 return product
 
         return None

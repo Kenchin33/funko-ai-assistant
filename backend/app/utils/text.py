@@ -4,6 +4,7 @@ import re
 def normalize_text(text: str) -> str:
     text = text.lower().strip()
     text = text.replace("’", "'").replace("`", "'")
+    text = text.replace("-", " ")
     text = re.sub(r"[^\w\s']+", " ", text, flags=re.UNICODE)
     text = re.sub(r"\s+", " ", text).strip()
     return text
