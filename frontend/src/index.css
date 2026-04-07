@@ -327,3 +327,9 @@ input {
   color: #ffffff;
   box-shadow: 0 10px 20px rgba(124, 58, 237, 0.18);
 }
+
+.reset-btn {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}

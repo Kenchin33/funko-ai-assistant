@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { createChatSession, sendMessage } from "../api/chatApi";
+import { createChatSession, getChatMessages, sendMessage } from "../api/chatApi";
 import { getFaqItems } from "../api/faqApi";
 import type { ChatMessage } from "../types/chat";
 import type { FAQItem } from "../types/faq";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
+const CHAT_SESSION_KEY = "funko_ai_session_id";
+
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState<string>("");
 
   const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
@@ -18,16 +21,33 @@ export default function ChatWindow() {
   useEffect(() => {
     async function init() {
       try {
-        const [session, faqs] = await Promise.all([
-          createChatSession(),
-          getFaqItems(),
-        ]);
-
-        setSessionId(session.id);
+        const faqs = await getFaqItems();
         setFaqItems(faqs);
+
+        const savedSessionId = localStorage.getItem(CHAT_SESSION_KEY);
+
+        if (savedSessionId) {
+          const numericSessionId = Number(savedSessionId);
+
+          if (!Number.isNaN(numericSessionId)) {
+            setSessionId(numericSessionId);
+
+            const history = await getChatMessages(numericSessionId);
+            setMessages(history);
+
+            setInitializing(false);
+            return;
+          }
+        }
+
+        const session = await createChatSession();
+        setSessionId(session.id);
+        localStorage.setItem(CHAT_SESSION_KEY, String(session.id));
       } catch (err) {
         console.error("Init error:", err);
         setError("Не вдалося ініціалізувати чат.");
+      } finally {
+        setInitializing(false);
       }
     }
 
@@ -78,6 +98,11 @@ export default function ChatWindow() {
     }
   }
 
+  function resetChatSession() {
+    localStorage.removeItem(CHAT_SESSION_KEY);
+    window.location.reload();
+  }
+
   function renderMenu() {
     if (selectedCategory) {
       const items = groupedFaq[selectedCategory] || [];
@@ -118,11 +143,19 @@ export default function ChatWindow() {
             key={item.category}
             onClick={() => setSelectedCategory(item.category)}
             className="quick-action-btn"
-            disabled={loading}
+            disabled={loading || initializing}
           >
             {item.label}
           </button>
         ))}
+
+        <button
+          onClick={resetChatSession}
+          className="quick-action-btn reset-btn"
+          disabled={loading || initializing}
+        >
+          Новий чат
+        </button>
       </div>
     );
   }
@@ -134,7 +167,9 @@ export default function ChatWindow() {
       {renderMenu()}
 
       <div className="chat-body">
-        {messages.length === 0 ? (
+        {initializing ? (
+          <div className="chat-placeholder">Завантаження історії чату...</div>
+        ) : messages.length === 0 ? (
           <div className="chat-placeholder">
             Оберіть категорію вище або напишіть своє запитання.
           </div>
@@ -144,7 +179,7 @@ export default function ChatWindow() {
       </div>
 
       <div className="chat-footer">
-        <MessageInput onSend={handleSend} disabled={loading || !sessionId} />
+        <MessageInput onSend={handleSend} disabled={loading || !sessionId || initializing} />
         {loading && <p className="chat-status">Асистент думає...</p>}
         {error && <p className="chat-error">{error}</p>}
       </div>
