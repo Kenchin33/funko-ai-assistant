@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { ChatMessage } from "../types/chat";
+import type { ChatMessage, ChatReplyAction } from "../types/chat";
 
 function BotIcon() {
   return (
@@ -17,6 +17,26 @@ function UserIcon() {
   );
 }
 
+function MessageActions({ actions }: { actions: ChatReplyAction[] }) {
+  if (!actions.length) return null;
+
+  return (
+    <div className="message-actions">
+      {actions.map((action, index) => (
+        <a
+          key={`${action.label}-${index}`}
+          href={action.url}
+          target="_blank"
+          rel="noreferrer"
+          className="message-action-link"
+        >
+          {action.label}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 export default function MessageList({ messages }: { messages: ChatMessage[] }) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,20 +46,31 @@ export default function MessageList({ messages }: { messages: ChatMessage[] }) {
 
   return (
     <div className="message-list">
-      {messages.map((m) => (
-        <div
-          key={m.id}
-          className={`message-row ${m.role === "user" ? "user" : "assistant"}`}
-        >
-          {m.role === "assistant" && <BotIcon />}
+      {messages.map((m) => {
+        const actions =
+          m.role === "assistant" && Array.isArray(m.metadata_json?.actions)
+            ? (m.metadata_json?.actions as ChatReplyAction[])
+            : [];
 
-          <div className={`message-bubble ${m.role === "user" ? "user" : "assistant"}`}>
-            {m.message_text}
+        return (
+          <div
+            key={m.id}
+            className={`message-row ${m.role === "user" ? "user" : "assistant"}`}
+          >
+            {m.role === "assistant" && <BotIcon />}
+
+            <div className="message-content">
+              <div className={`message-bubble ${m.role === "user" ? "user" : "assistant"}`}>
+                {m.message_text}
+              </div>
+
+              {m.role === "assistant" && <MessageActions actions={actions} />}
+            </div>
+
+            {m.role === "user" && <UserIcon />}
           </div>
-
-          {m.role === "user" && <UserIcon />}
-        </div>
-      ))}
+        );
+      })}
       <div ref={bottomRef} />
     </div>
   );

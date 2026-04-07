@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createChatSession, sendMessage } from "../api/chatApi";
 import { getFaqItems } from "../api/faqApi";
-import type { ChatMessage, ChatReplyAction } from "../types/chat";
+import type { ChatMessage } from "../types/chat";
 import type { FAQItem } from "../types/faq";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
@@ -9,7 +9,6 @@ import MessageInput from "./MessageInput";
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [actions, setActions] = useState<ChatReplyAction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -70,7 +69,6 @@ export default function ChatWindow() {
         res.assistant_message,
       ]);
 
-      setActions(res.actions || []);
       setSelectedCategory(null);
     } catch (err) {
       console.error("Send message error:", err);
@@ -144,22 +142,6 @@ export default function ChatWindow() {
           <MessageList messages={messages} />
         )}
       </div>
-
-      {actions.length > 0 && (
-        <div className="backend-actions">
-          {actions.map((a, i) => (
-            <a
-              key={i}
-              href={a.url}
-              target="_blank"
-              rel="noreferrer"
-              className="backend-action-link"
-            >
-              {a.label}
-            </a>
-          ))}
-        </div>
-      )}
 
       <div className="chat-footer">
         <MessageInput onSend={handleSend} disabled={loading || !sessionId} />

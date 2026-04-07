@@ -192,7 +192,8 @@ input {
 }
 
 .message-bubble {
-  max-width: 74%;
+  width: fit-content;
+  max-width: 100%;
   padding: 13px 16px;
   border-radius: 18px;
   white-space: pre-wrap;
@@ -292,4 +293,37 @@ input {
   margin: 10px 4px 0;
   font-size: 13px;
   color: #dc2626;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 74%;
+}
+
+.message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.message-action-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: #ede9fe;
+  color: #5b21b6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message-action-link:hover {
+  transform: scale(1.04);
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.18);
 }

@@ -1,19 +1,24 @@
 export type ChatRole = "user" | "assistant";
 
+export interface ChatReplyAction {
+  type: string;
+  label: string;
+  url: string;
+}
+
+export interface ChatMessageMetadata {
+  actions?: ChatReplyAction[];
+  [key: string]: unknown;
+}
+
 export interface ChatMessage {
   id: number;
   session_id: number;
   role: ChatRole;
   message_text: string;
   detected_intent: string | null;
-  metadata_json: Record<string, unknown> | null;
+  metadata_json: ChatMessageMetadata | null;
   created_at: string;
-}
-
-export interface ChatReplyAction {
-  type: string;
-  label: string;
-  url: string;
 }
 
 export interface ChatReplyResponse {
