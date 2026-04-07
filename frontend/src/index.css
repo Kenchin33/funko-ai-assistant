@@ -206,3 +206,14 @@ input {
   font-size: 13px;
   color: #dc2626;
 }
+
+.back-btn {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.question-btn {
+  width: 100%;
+  text-align: left;
+  padding: 14px 18px;
+}

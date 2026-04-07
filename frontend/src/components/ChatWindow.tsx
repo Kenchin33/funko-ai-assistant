@@ -1,17 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createChatSession, sendMessage } from "../api/chatApi";
+import { getFaqItems } from "../api/faqApi";
 import type { ChatMessage, ChatReplyAction } from "../types/chat";
+import type { FAQItem } from "../types/faq";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
-const quickActions = [
-  { label: "Доставка", question: "Які у вас умови доставки?" },
-  { label: "Оплата", question: "Які у вас варіанти оплати?" },
-  { label: "Повернення", question: "У яких випадках можливе повернення замовлення?" },
-  { label: "Оригінальність", question: "Ви продаєте оригінальну продукцію?" },
-  { label: "Передзамовлення", question: "Які умови передзамовлення?" },
-  { label: "Контакти", question: "Як я можу зв'язатись з вами?" },
-];
+const categoryLabels: Record<string, string> = {
+  delivery: "Доставка",
+  payment: "Оплата",
+  returns: "Повернення",
+  originality: "Оригінальність",
+  stock: "Наявність",
+  preorder: "Передзамовлення",
+  manager_contact: "Контакти",
+};
 
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -20,19 +23,44 @@ export default function ChatWindow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
+  const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   useEffect(() => {
     async function init() {
       try {
-        const session = await createChatSession();
+        const [session, faqs] = await Promise.all([
+          createChatSession(),
+          getFaqItems(),
+        ]);
+
         setSessionId(session.id);
+        setFaqItems(faqs);
       } catch (err) {
-        console.error("Session init error:", err);
-        setError("Не вдалося створити чат-сесію.");
+        console.error("Init error:", err);
+        setError("Не вдалося ініціалізувати чат.");
       }
     }
 
     init();
   }, []);
+
+  const groupedFaq = useMemo(() => {
+    const grouped: Record<string, FAQItem[]> = {};
+
+    for (const item of faqItems) {
+      if (!grouped[item.category]) {
+        grouped[item.category] = [];
+      }
+      grouped[item.category].push(item);
+    }
+
+    return grouped;
+  }, [faqItems]);
+
+  const categories = useMemo(() => {
+    return Object.keys(groupedFaq);
+  }, [groupedFaq]);
 
   async function handleSend(text: string) {
     if (!sessionId || loading) return;
@@ -58,27 +86,60 @@ export default function ChatWindow() {
     }
   }
 
+  function renderMenu() {
+    if (selectedCategory) {
+      const items = groupedFaq[selectedCategory] || [];
+
+      return (
+        <div className="quick-actions">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="quick-action-btn back-btn"
+            disabled={loading}
+          >
+            ← Назад
+          </button>
+
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleSend(item.question)}
+              className="quick-action-btn question-btn"
+              disabled={loading || !sessionId}
+            >
+              {item.question}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="quick-actions">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className="quick-action-btn"
+            disabled={loading}
+          >
+            {categoryLabels[category] || category}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="chat-shell">
       <div className="chat-header">Funko AI Assistant</div>
 
-      <div className="quick-actions">
-        {quickActions.map((action, i) => (
-          <button
-            key={i}
-            onClick={() => handleSend(action.question)}
-            className="quick-action-btn"
-            disabled={loading || !sessionId}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
+      {renderMenu()}
 
       <div className="chat-body">
         {messages.length === 0 ? (
           <div className="chat-placeholder">
-            Поставте запитання або оберіть одну з категорій вище.
+            Оберіть категорію вище або напишіть своє запитання.
           </div>
         ) : (
           <MessageList messages={messages} />
