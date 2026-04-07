@@ -5,6 +5,7 @@ from app.services.chat_service import ChatService
 from app.services.faq_match_service import FAQMatchService
 from app.services.intent_service import IntentService, IntentType
 from app.services.product_service import ProductService
+from app.services.llm_service import LLMService
 
 
 class ChatReplyService:
@@ -173,20 +174,21 @@ class ChatReplyService:
                 "actions": actions,
             }
 
-        # ---------------- FALLBACK ----------------
-        fallback_text = (
-            "Я поки що не знайшов точної відповіді 🤔\n"
-            "Спробуй уточнити запит або запитай про доставку, оплату чи товари."
-        )
+        # ---------------- LLM FALLBACK ----------------
+        llm = LLMService()
+
+        ai_text = llm.generate_reply(message_text)
 
         assistant_message = ChatService.create_message(
             db=db,
             session_id=session_id,
             payload=ChatMessageCreate(
                 role="assistant",
-                message_text=fallback_text,
-                detected_intent="fallback",
-                metadata_json={},
+                message_text=ai_text,
+                detected_intent="llm_fallback",
+                metadata_json={
+                    "model": "gemini",
+                },
             ),
         )
 
@@ -195,6 +197,6 @@ class ChatReplyService:
             "user_message": user_message,
             "assistant_message": assistant_message,
             "matched_faq_id": None,
-            "matched_intent": "fallback",
+            "matched_intent": "llm_fallback",
             "actions": [],
         }
