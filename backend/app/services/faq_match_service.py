@@ -64,7 +64,7 @@ class FAQMatchService:
                 best_score = score
                 best_faq = faq
 
-        if best_faq and best_score >= 45:
+        if best_faq and best_score >= 30:
             return FAQMatchResult(
                 matched=True,
                 faq=best_faq,

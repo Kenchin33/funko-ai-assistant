@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from sqlalchemy import delete
 
 from app.core.database import SessionLocal
@@ -8,7 +13,7 @@ from app.utils.text import normalize_text
 ALIASES = [
     # Spider-Man
     ("людина павук", "character", "Spider-Man", None),
-    ("людина павука", "character", "Spider-Man", None),
+    ("людини павука", "character", "Spider-Man", None),
     ("спайдер мен", "character", "Spider-Man", None),
     ("spider man", "character", "Spider-Man", None),
 
