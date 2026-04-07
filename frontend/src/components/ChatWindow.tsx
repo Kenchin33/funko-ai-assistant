@@ -136,7 +136,8 @@ export default function ChatWindow() {
       id: Date.now(),
       session_id: sessionId ?? 0,
       role: "assistant",
-      message_text: "Дякую за звернення! Якщо знадобиться допомога знову — звертайтесь. Гарного дня 💜",
+      message_text:
+        "Дякую за звернення! Якщо знадобиться допомога знову — звертайтесь. Гарного дня 💜",
       detected_intent: "conversation_end",
       metadata_json: null,
       created_at: new Date().toISOString(),
@@ -205,33 +206,32 @@ export default function ChatWindow() {
       <div className="chat-header">
         <div className="chat-header-title">Funko AI Assistant</div>
 
-        <div className="chat-header-menu" ref={menuRef}>
-          <button
-            className="menu-trigger"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="Відкрити меню"
-          >
-            ⋮
-          </button>
+        {!chatEnded && (
+          <div className="chat-header-menu" ref={menuRef}>
+            <button
+              className="menu-trigger"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Відкрити меню"
+            >
+              ⋮
+            </button>
 
-          {menuOpen && (
-            <div className="header-dropdown">
-              <button
-                className="dropdown-item"
-                onClick={resetChatSession}
-              >
-                Новий чат
-              </button>
+            {menuOpen && (
+              <div className="header-dropdown">
+                <button className="dropdown-item" onClick={resetChatSession}>
+                  Новий чат
+                </button>
 
-              <button
-                className="dropdown-item danger"
-                onClick={endConversation}
-              >
-                Завершити розмову
-              </button>
-            </div>
-          )}
-        </div>
+                <button
+                  className="dropdown-item danger"
+                  onClick={endConversation}
+                >
+                  Завершити розмову
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {renderMenu()}
@@ -248,11 +248,20 @@ export default function ChatWindow() {
         )}
       </div>
 
-      {!chatEnded && (
+      {!chatEnded ? (
         <div className="chat-footer">
-          <MessageInput onSend={handleSend} disabled={loading || !sessionId || initializing} />
+          <MessageInput
+            onSend={handleSend}
+            disabled={loading || !sessionId || initializing}
+          />
           {loading && <p className="chat-status">Асистент думає...</p>}
           {error && <p className="chat-error">{error}</p>}
+        </div>
+      ) : (
+        <div className="chat-ended-footer">
+          <button className="new-chat-after-end-btn" onClick={resetChatSession}>
+            Новий чат
+          </button>
         </div>
       )}
     </div>
