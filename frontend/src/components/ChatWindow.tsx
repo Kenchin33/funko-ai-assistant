@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createChatSession, getChatMessages, sendMessage } from "../api/chatApi";
 import { getFaqItems } from "../api/faqApi";
 import type { ChatMessage } from "../types/chat";
@@ -7,6 +7,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
 const CHAT_SESSION_KEY = "funko_ai_session_id";
+const CHAT_ENDED_KEY = "funko_ai_chat_ended";
 
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -18,11 +19,19 @@ export default function ChatWindow() {
   const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [chatEnded, setChatEnded] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     async function init() {
       try {
         const faqs = await getFaqItems();
         setFaqItems(faqs);
+
+        const ended = localStorage.getItem(CHAT_ENDED_KEY) === "true";
+        setChatEnded(ended);
 
         const savedSessionId = localStorage.getItem(CHAT_SESSION_KEY);
 
@@ -54,6 +63,19 @@ export default function ChatWindow() {
     init();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const groupedFaq = useMemo(() => {
     const grouped: Record<string, FAQItem[]> = {};
 
@@ -75,7 +97,7 @@ export default function ChatWindow() {
   }, [groupedFaq]);
 
   async function handleSend(text: string) {
-    if (!sessionId || loading) return;
+    if (!sessionId || loading || chatEnded) return;
 
     setLoading(true);
     setError("");
@@ -100,10 +122,36 @@ export default function ChatWindow() {
 
   function resetChatSession() {
     localStorage.removeItem(CHAT_SESSION_KEY);
+    localStorage.removeItem(CHAT_ENDED_KEY);
     window.location.reload();
   }
 
+  function endConversation() {
+    if (chatEnded) {
+      setMenuOpen(false);
+      return;
+    }
+
+    const farewellMessage: ChatMessage = {
+      id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "assistant",
+      message_text: "Дякую за звернення! Якщо знадобиться допомога знову — звертайтесь. Гарного дня 💜",
+      detected_intent: "conversation_end",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, farewellMessage]);
+    setChatEnded(true);
+    setSelectedCategory(null);
+    setMenuOpen(false);
+    localStorage.setItem(CHAT_ENDED_KEY, "true");
+  }
+
   function renderMenu() {
+    if (chatEnded) return null;
+
     if (selectedCategory) {
       const items = groupedFaq[selectedCategory] || [];
 
@@ -148,21 +196,43 @@ export default function ChatWindow() {
             {item.label}
           </button>
         ))}
-
-        <button
-          onClick={resetChatSession}
-          className="quick-action-btn reset-btn"
-          disabled={loading || initializing}
-        >
-          Новий чат
-        </button>
       </div>
     );
   }
 
   return (
     <div className="chat-shell">
-      <div className="chat-header">Funko AI Assistant</div>
+      <div className="chat-header">
+        <div className="chat-header-title">Funko AI Assistant</div>
+
+        <div className="chat-header-menu" ref={menuRef}>
+          <button
+            className="menu-trigger"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Відкрити меню"
+          >
+            ⋮
+          </button>
+
+          {menuOpen && (
+            <div className="header-dropdown">
+              <button
+                className="dropdown-item"
+                onClick={resetChatSession}
+              >
+                Новий чат
+              </button>
+
+              <button
+                className="dropdown-item danger"
+                onClick={endConversation}
+              >
+                Завершити розмову
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {renderMenu()}
 
@@ -178,11 +248,13 @@ export default function ChatWindow() {
         )}
       </div>
 
-      <div className="chat-footer">
-        <MessageInput onSend={handleSend} disabled={loading || !sessionId || initializing} />
-        {loading && <p className="chat-status">Асистент думає...</p>}
-        {error && <p className="chat-error">{error}</p>}
-      </div>
+      {!chatEnded && (
+        <div className="chat-footer">
+          <MessageInput onSend={handleSend} disabled={loading || !sessionId || initializing} />
+          {loading && <p className="chat-status">Асистент думає...</p>}
+          {error && <p className="chat-error">{error}</p>}
+        </div>
+      )}
     </div>
   );
 }

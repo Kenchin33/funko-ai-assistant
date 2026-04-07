@@ -36,8 +36,78 @@ input {
   padding: 20px;
   background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-header-title {
   font-size: 2rem;
   font-weight: 700;
+}
+
+.chat-header-menu {
+  position: relative;
+}
+
+.menu-trigger {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.menu-trigger:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.header-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid #ede9fe;
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(76, 29, 149, 0.18);
+  padding: 8px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: #ffffff;
+  color: #2e1065;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #f5f3ff;
+  transform: translateX(2px);
+}
+
+.dropdown-item.danger {
+  color: #dc2626;
+}
+
+.dropdown-item.danger:hover {
+  background: #fef2f2;
 }
 
 .quick-actions {
