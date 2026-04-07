@@ -9,38 +9,17 @@ export default function MessageList({ messages }: { messages: ChatMessage[] }) {
   }, [messages]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        padding: "10px",
-      }}
-    >
+    <div className="message-list">
       {messages.map((m) => (
         <div
           key={m.id}
-          style={{
-            display: "flex",
-            justifyContent: m.role === "user" ? "flex-end" : "flex-start",
-          }}
+          className={`message-row ${m.role === "user" ? "user" : "assistant"}`}
         >
-          <div
-            style={{
-              background: m.role === "user" ? "#2563eb" : "#ffffff",
-              color: m.role === "user" ? "#ffffff" : "#111827",
-              padding: "12px 16px",
-              borderRadius: "16px",
-              maxWidth: "70%",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <div className={`message-bubble ${m.role === "user" ? "user" : "assistant"}`}>
             {m.message_text}
           </div>
         </div>
       ))}
-
       <div ref={bottomRef} />
     </div>
   );

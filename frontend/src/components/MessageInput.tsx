@@ -11,48 +11,31 @@ export default function MessageInput({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!value.trim()) return;
 
-    await onSend(value);
+    const trimmed = value.trim();
+    if (!trimmed || disabled) return;
+
+    await onSend(trimmed);
     setValue("");
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        gap: "10px",
-        marginTop: "10px",
-      }}
-    >
+    <form onSubmit={handleSubmit} className="message-input-form">
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Напишіть повідомлення..."
-        style={{
-          flex: 1,
-          padding: "12px",
-          borderRadius: "12px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        className="message-input"
+        disabled={disabled}
       />
 
-    <button
+      <button
         type="submit"
         disabled={disabled}
-        style={{
-            padding: "12px 16px",
-            borderRadius: "12px",
-            border: "none",
-            background: "#6d28d9",
-            color: "#fff",
-            cursor: "pointer",
-        }}
-    >
+        className="send-btn"
+      >
         →
-    </button>
+      </button>
     </form>
   );
 }

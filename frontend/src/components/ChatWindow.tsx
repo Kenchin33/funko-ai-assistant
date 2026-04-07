@@ -18,110 +18,82 @@ export default function ChatWindow() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [actions, setActions] = useState<ChatReplyAction[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     async function init() {
-      const session = await createChatSession();
-      setSessionId(session.id);
+      try {
+        const session = await createChatSession();
+        setSessionId(session.id);
+      } catch (err) {
+        console.error("Session init error:", err);
+        setError("Не вдалося створити чат-сесію.");
+      }
     }
+
     init();
   }, []);
 
   async function handleSend(text: string) {
-    if (!sessionId) return;
+    if (!sessionId || loading) return;
 
     setLoading(true);
+    setError("");
 
-    const res = await sendMessage(sessionId, text);
+    try {
+      const res = await sendMessage(sessionId, text);
 
-    setMessages((prev) => [
-      ...prev,
-      res.user_message,
-      res.assistant_message,
-    ]);
+      setMessages((prev) => [
+        ...prev,
+        res.user_message,
+        res.assistant_message,
+      ]);
 
-    setActions(res.actions || []);
-    setLoading(false);
+      setActions(res.actions || []);
+    } catch (err) {
+      console.error("Send message error:", err);
+      setError("Не вдалося отримати відповідь від сервера.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "40px auto",
-        borderRadius: "20px",
-        overflow: "hidden",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
-        background: "#ffffff",
-      }}
-    >
-      {/* HEADER */}
-      <div
-        style={{
-          padding: "16px",
-          background: "#6d28d9", // фіолетовий
-          color: "#fff",
-          fontWeight: "bold",
-        }}
-      >
-        Funko AI Assistant
-      </div>
+    <div className="chat-shell">
+      <div className="chat-header">Funko AI Assistant</div>
 
-      {/* QUICK ACTIONS */}
-      <div
-        style={{
-          padding: "10px",
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap",
-          borderBottom: "1px solid #eee",
-        }}
-      >
+      <div className="quick-actions">
         {quickActions.map((action, i) => (
           <button
             key={i}
             onClick={() => handleSend(action.question)}
-            style={{
-              padding: "8px 12px",
-              borderRadius: "10px",
-              border: "none",
-              background: "#ede9fe",
-              color: "#5b21b6",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
+            className="quick-action-btn"
+            disabled={loading || !sessionId}
           >
             {action.label}
           </button>
         ))}
       </div>
 
-      {/* CHAT */}
-      <div
-        style={{
-          height: 400,
-          overflowY: "auto",
-          background: "#fafafa",
-        }}
-      >
-        <MessageList messages={messages} />
+      <div className="chat-body">
+        {messages.length === 0 ? (
+          <div className="chat-placeholder">
+            Поставте запитання або оберіть одну з категорій вище.
+          </div>
+        ) : (
+          <MessageList messages={messages} />
+        )}
       </div>
 
-      {/* ACTION BUTTONS (з бекенду) */}
       {actions.length > 0 && (
-        <div style={{ padding: "10px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="backend-actions">
           {actions.map((a, i) => (
             <a
               key={i}
               href={a.url}
               target="_blank"
-              style={{
-                padding: "8px 12px",
-                borderRadius: "10px",
-                background: "#ddd6fe",
-                color: "#4c1d95",
-                textDecoration: "none",
-              }}
+              rel="noreferrer"
+              className="backend-action-link"
             >
               {a.label}
             </a>
@@ -129,14 +101,10 @@ export default function ChatWindow() {
         </div>
       )}
 
-      {/* INPUT */}
-      <div style={{ padding: "10px" }}>
-        <MessageInput onSend={handleSend} disabled={loading} />
-        {loading && (
-          <p style={{ fontSize: "12px", color: "#6b7280" }}>
-            Асистент думає...
-          </p>
-        )}
+      <div className="chat-footer">
+        <MessageInput onSend={handleSend} disabled={loading || !sessionId} />
+        {loading && <p className="chat-status">Асистент думає...</p>}
+        {error && <p className="chat-error">{error}</p>}
       </div>
     </div>
   );
