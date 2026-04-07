@@ -5,6 +5,7 @@ class IntentType:
     PRODUCT_SEARCH = "product_search"
     PRODUCT_EXACT = "product_exact"
     FAQ = "faq"
+    LLM = "llm"
     UNKNOWN = "unknown"
 
 
@@ -28,18 +29,29 @@ class IntentService:
         "в наявності"
     ]
 
+    LLM_HINTS = [
+        "яка різниця",
+        "чим відрізняється",
+        "поясни",
+        "поясни будь ласка",
+        "що порадиш",
+        "що краще",
+        "порівняй",
+        "розкажи",
+    ]
+
     @staticmethod
     def detect_intent(message_text: str) -> str:
         text = normalize_text(message_text)
 
-        # Exact lookup (якщо є цифри або SKU)
+        if any(phrase in text for phrase in IntentService.LLM_HINTS):
+            return IntentType.LLM
+
         if any(word in text for word in IntentService.PRODUCT_EXACT_HINTS):
             if any(char.isdigit() for char in text):
                 return IntentType.PRODUCT_EXACT
 
-        # Product search
         if any(keyword in text for keyword in IntentService.PRODUCT_SEARCH_KEYWORDS):
             return IntentType.PRODUCT_SEARCH
 
-        # fallback → FAQ
         return IntentType.FAQ

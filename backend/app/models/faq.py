@@ -11,6 +11,8 @@ class FAQEntry(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     category: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    category_label: Mapped[str] = mapped_column(String(255), nullable=False)
+
     question: Mapped[str] = mapped_column(String(500), nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     keywords: Mapped[str | None] = mapped_column(String(500), nullable=True)

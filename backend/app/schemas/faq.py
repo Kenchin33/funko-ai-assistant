@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class FAQBase(BaseModel):
     category: str
+    category_label: str
     question: str
     answer: str
     keywords: str | None = None
@@ -20,6 +21,7 @@ class FAQCreate(FAQBase):
 
 class FAQUpdate(BaseModel):
     category: str | None = None
+    category_label: str | None = None
     question: str | None = None
     answer: str | None = None
     keywords: str | None = None

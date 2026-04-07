@@ -6,16 +6,6 @@ import type { FAQItem } from "../types/faq";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
-const categoryLabels: Record<string, string> = {
-  delivery: "Доставка",
-  payment: "Оплата",
-  returns: "Повернення",
-  originality: "Оригінальність",
-  stock: "Наявність",
-  preorder: "Передзамовлення",
-  manager_contact: "Контакти",
-};
-
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -59,7 +49,10 @@ export default function ChatWindow() {
   }, [faqItems]);
 
   const categories = useMemo(() => {
-    return Object.keys(groupedFaq);
+    return Object.entries(groupedFaq).map(([category, items]) => ({
+      category,
+      label: items[0]?.category_label || category,
+    }));
   }, [groupedFaq]);
 
   async function handleSend(text: string) {
@@ -117,14 +110,14 @@ export default function ChatWindow() {
 
     return (
       <div className="quick-actions">
-        {categories.map((category) => (
+        {categories.map((item) => (
           <button
-            key={category}
-            onClick={() => setSelectedCategory(category)}
+            key={item.category}
+            onClick={() => setSelectedCategory(item.category)}
             className="quick-action-btn"
             disabled={loading}
           >
-            {categoryLabels[category] || category}
+            {item.label}
           </button>
         ))}
       </div>

@@ -136,6 +136,34 @@ class ChatReplyService:
                 "matched_intent": "product_search_not_found",
                 "actions": [],
             }
+        
+        # ---------------- LLM DIRECT ----------------
+        if intent == IntentType.LLM:
+            llm = LLMService()
+            ai_text = llm.generate_reply(message_text)
+
+            assistant_message = ChatService.create_message(
+                db=db,
+                session_id=session_id,
+                payload=ChatMessageCreate(
+                    role="assistant",
+                    message_text=ai_text,
+                    detected_intent="llm_fallback",
+                    metadata_json={
+                        "model": "gemini",
+                    },
+                ),
+            )
+
+            return {
+                "session_id": session_id,
+                "user_message": user_message,
+                "assistant_message": assistant_message,
+                "matched_faq_id": None,
+                "matched_intent": "llm_fallback",
+                "actions": [],
+            }
+
 
         # ---------------- FAQ ----------------
         faq_match = FAQMatchService.find_best_match(db, message_text)
