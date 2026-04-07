@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 from app.utils.text import normalize_text
+from app.services.product_alias_service import ProductAliasService
 
 
 class ProductService:
@@ -74,80 +75,39 @@ class ProductService:
 
     @staticmethod
     def search(db: Session, query: str) -> list[Product]:
-        cleaned_query = ProductService._clean_search_query(query)
+        aliases = ProductAliasService.find_alias_matches(db, query)
 
-        if not cleaned_query:
-            return []
+        filters = []
 
-        stmt = (
-            select(Product)
-            .where(Product.is_active.is_(True))
-            .order_by(Product.in_stock.desc(), Product.id.asc())
-        )
-        products = list(db.scalars(stmt).all())
+        for alias in aliases:
+            if alias.target_type == "character":
+                filters.append(Product.character_name.ilike(f"%{alias.target_value}%"))
 
-        query_tokens = set(cleaned_query.split())
-        matched_products: list[tuple[int, Product]] = []
+            elif alias.target_type == "franchise":
+                filters.append(Product.franchise.ilike(f"%{alias.target_value}%"))
 
-        for product in products:
-            searchable_text = normalize_text(
-                " ".join(
-                    [
-                        product.title or "",
-                        product.sku or "",
-                        product.character_name or "",
-                        product.franchise or "",
-                        product.series or "",
-                    ]
-                )
+            elif alias.target_type == "series":
+                filters.append(Product.series.ilike(f"%{alias.target_value}%"))
+
+        if filters:
+            stmt = (
+                select(Product)
+                .where(Product.is_active.is_(True))
+                .where(or_(*filters))
+                .order_by(Product.in_stock.desc(), Product.id.asc())
             )
+            return list(db.scalars(stmt).all())
 
-            score = 0
-
-            if cleaned_query in searchable_text:
-                score += 50
-
-            for token in query_tokens:
-                if token in searchable_text:
-                    score += 15
-
-            if score > 0:
-                matched_products.append((score, product))
-
-        matched_products.sort(key=lambda item: (-item[0], not item[1].in_stock, item[1].id))
-        return [product for _, product in matched_products]
+        # fallback — старий пошук
+        return []
 
     @staticmethod
     def exact_lookup(db: Session, query: str) -> Product | None:
-        cleaned_query = ProductService._clean_search_query(query)
+        aliases = ProductAliasService.find_alias_matches(db, query)
 
-        if not cleaned_query:
-            return None
-
-        stmt = (
-            select(Product)
-            .where(Product.is_active.is_(True))
-            .order_by(Product.in_stock.desc(), Product.id.asc())
-        )
-
-        products = list(db.scalars(stmt).all())
-
-        for product in products:
-            title = normalize_text(product.title or "")
-            sku = normalize_text(product.sku or "")
-            character_name = normalize_text(product.character_name or "")
-            combined_title_sku = normalize_text(f"{product.title or ''} {product.sku or ''}")
-            combined_character_sku = normalize_text(f"{product.character_name or ''} {product.sku or ''}")
-
-            if cleaned_query == title:
-                return product
-            if sku and cleaned_query == sku:
-                return product
-            if cleaned_query == combined_title_sku:
-                return product
-            if character_name and cleaned_query == character_name:
-                return product
-            if combined_character_sku and cleaned_query == combined_character_sku:
-                return product
+        for alias in aliases:
+            if alias.target_type == "product" and alias.product_id:
+                stmt = select(Product).where(Product.id == alias.product_id)
+                return db.scalar(stmt)
 
         return None
