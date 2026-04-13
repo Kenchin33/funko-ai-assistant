@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createComplaint } from "../api/complaintApi";
 
 interface ComplaintFormProps {
@@ -18,6 +18,8 @@ export default function ComplaintForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +50,10 @@ export default function ComplaintForm({
     }
   }
 
+  function handlePickFile() {
+    fileInputRef.current?.click();
+  }
+
   return (
     <div className="complaint-inline-card">
       <div className="complaint-form-header">
@@ -74,7 +80,7 @@ export default function ComplaintForm({
 
         <input
           type="text"
-          placeholder="Номер замовлення (опціонально)"
+          placeholder="Номер замовлення (опціонально) "
           value={orderNumber}
           onChange={(e) => setOrderNumber(e.target.value)}
           className="complaint-input"
@@ -88,12 +94,27 @@ export default function ComplaintForm({
           rows={5}
         />
 
-        <input
-          type="file"
-          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="complaint-file-input"
-        />
+        <div className="complaint-file-row">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="complaint-file-input-hidden"
+          />
+
+          <button
+            type="button"
+            onClick={handlePickFile}
+            className="complaint-pick-file-btn"
+          >
+            Вибрати файл
+          </button>
+
+          <span className="complaint-file-name">
+            {file ? file.name : "Файл не вибрано"}
+          </span>
+        </div>
 
         {error && <p className="chat-error">{error}</p>}
 

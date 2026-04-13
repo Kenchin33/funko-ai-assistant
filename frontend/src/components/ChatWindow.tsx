@@ -155,8 +155,18 @@ export default function ChatWindow() {
   }
 
   function openComplaintForm() {
-    const assistantMessage: ChatMessage = {
+    const userMessage: ChatMessage = {
       id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "user",
+      message_text: "Хочу надіслати скаргу",
+      detected_intent: "complaint_request",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+  
+    const assistantMessage: ChatMessage = {
+      id: Date.now() + 1,
       session_id: sessionId ?? 0,
       role: "assistant",
       message_text:
@@ -165,8 +175,8 @@ export default function ChatWindow() {
       metadata_json: null,
       created_at: new Date().toISOString(),
     };
-
-    setMessages((prev) => [...prev, assistantMessage]);
+  
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setComplaintFormOpen(true);
     setSelectedCategory(null);
   }
