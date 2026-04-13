@@ -6,7 +6,15 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.core.database import Base
-from app.models import FAQEntry, ChatMessage, ChatSession, Product, ProductAlias
+from app.models import (
+    ChatMessage,
+    ChatSession,
+    Complaint,
+    ComplaintAttachment,
+    FAQEntry,
+    Product,
+    ProductAlias,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

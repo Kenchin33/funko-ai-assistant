@@ -9,6 +9,7 @@ from app.schemas.chat import (
 )
 from app.schemas.faq import FAQCreate, FAQRead, FAQUpdate
 from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.complaint import ComplaintAttachmentRead, ComplaintRead
 
 __all__ = [
     "FAQCreate",
@@ -24,4 +25,6 @@ __all__ = [
     "ProductCreate",
     "ProductRead",
     "ProductUpdate",
+    "ComplaintRead",
+    "ComplaintAttachmentRead",
 ]

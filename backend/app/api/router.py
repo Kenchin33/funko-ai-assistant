@@ -7,6 +7,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.products import router as products_router
 from app.api.routes.setup import router as setup_router
 from app.core.config import settings
+from app.api.routes.complaints import router as complaints_router
 
 api_router = APIRouter(prefix=settings.API_PREFIX)
 
@@ -16,3 +17,4 @@ api_router.include_router(setup_router, tags=["Setup"])
 api_router.include_router(faq_router, tags=["FAQ"])
 api_router.include_router(chat_router, tags=["Chat"])
 api_router.include_router(products_router, tags=["Products"])
+api_router.include_router(complaints_router, tags=["Complaints"])
