@@ -6,8 +6,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class ComplaintAttachmentRead(BaseModel):
     id: int
     file_name: str
-    file_path: str
     mime_type: str
+    file_size: int
     uploaded_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

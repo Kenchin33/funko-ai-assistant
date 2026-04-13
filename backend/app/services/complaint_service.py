@@ -1,30 +1,21 @@
-import os
-import shutil
-import uuid
-from pathlib import Path
-
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.models.complaint import Complaint
 from app.models.complaint_attachment import ComplaintAttachment
 
-UPLOAD_DIR = Path("uploads/complaints")
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 class ComplaintService:
     @staticmethod
-    def _ensure_upload_dir() -> None:
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-    @staticmethod
-    def _save_attachment(file: UploadFile) -> tuple[str, str, str]:
-        ComplaintService._ensure_upload_dir()
-
-        extension = Path(file.filename or "").suffix.lower()
+    def _validate_file(file: UploadFile, content: bytes) -> tuple[str, str, int]:
+        file_name = file.filename or "attachment"
+        extension = f".{file_name.split('.')[-1].lower()}" if "." in file_name else ""
         mime_type = file.content_type or ""
+        file_size = len(content)
 
         if extension not in ALLOWED_EXTENSIONS or mime_type not in ALLOWED_IMAGE_TYPES:
             raise HTTPException(
@@ -32,13 +23,13 @@ class ComplaintService:
                 detail="Only JPG, JPEG and PNG files are allowed.",
             )
 
-        unique_name = f"{uuid.uuid4().hex}{extension}"
-        file_path = UPLOAD_DIR / unique_name
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size must not exceed 5 MB.",
+            )
 
-        with file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        return file.filename or unique_name, str(file_path), mime_type
+        return file_name, mime_type, file_size
 
     @staticmethod
     def create_complaint(
@@ -60,19 +51,18 @@ class ComplaintService:
         db.add(complaint)
         db.flush()
 
-        attachments: list[ComplaintAttachment] = []
-
         for file in files or []:
-            original_name, saved_path, mime_type = ComplaintService._save_attachment(file)
+            content = file.file.read()
+            file_name, mime_type, file_size = ComplaintService._validate_file(file, content)
 
             attachment = ComplaintAttachment(
                 complaint_id=complaint.id,
-                file_name=original_name,
-                file_path=saved_path,
+                file_name=file_name,
                 mime_type=mime_type,
+                file_size=file_size,
+                file_content=content,
             )
             db.add(attachment)
-            attachments.append(attachment)
 
         db.commit()
         db.refresh(complaint)

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -16,8 +16,9 @@ class ComplaintAttachment(Base):
         index=True,
     )
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    file_path: Mapped[str] = mapped_column(String(1000), nullable=False)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
