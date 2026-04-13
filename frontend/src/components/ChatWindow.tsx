@@ -98,8 +98,64 @@ export default function ChatWindow() {
     }));
   }, [groupedFaq]);
 
+  function isComplaintRequest(text: string): boolean {
+    const normalized = text.toLowerCase().trim();
+
+    const complaintPhrases = [
+      "хочу залишити скаргу",
+      "хочу подати скаргу",
+      "хочу надіслати скаргу",
+      "хочу поскаржитись",
+      "хочу поскаржитися",
+      "у мене скарга",
+      "у мене є скарга",
+      "в мене є скарга",
+      "в мене скарга",
+      "у мене претензія",
+      "в мене претензія",
+      "хочу оформити скаргу",
+      "потрібно залишити скаргу",
+      "хочу написати скаргу",
+    ];
+
+    return complaintPhrases.some((phrase) => normalized.includes(phrase));
+  }
+
+  function appendComplaintFlow(userText: string) {
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "user",
+      message_text: userText,
+      detected_intent: "complaint_request",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+
+    const assistantMessage: ChatMessage = {
+      id: Date.now() + 1,
+      session_id: sessionId ?? 0,
+      role: "assistant",
+      message_text:
+        "Звісно. Заповніть, будь ласка, форму скарги нижче, і ми передамо її в підтримку.",
+      detected_intent: "complaint_form_open",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setComplaintFormOpen(true);
+    setSelectedCategory(null);
+    setError("");
+  }
+
   async function handleSend(text: string) {
     if (!sessionId || loading || chatEnded) return;
+
+    if (isComplaintRequest(text)) {
+      appendComplaintFlow(text);
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -155,30 +211,7 @@ export default function ChatWindow() {
   }
 
   function openComplaintForm() {
-    const userMessage: ChatMessage = {
-      id: Date.now(),
-      session_id: sessionId ?? 0,
-      role: "user",
-      message_text: "Хочу надіслати скаргу",
-      detected_intent: "complaint_request",
-      metadata_json: null,
-      created_at: new Date().toISOString(),
-    };
-  
-    const assistantMessage: ChatMessage = {
-      id: Date.now() + 1,
-      session_id: sessionId ?? 0,
-      role: "assistant",
-      message_text:
-        "Звісно. Заповніть, будь ласка, форму скарги нижче, і ми передамо її в підтримку.",
-      detected_intent: "complaint_form_open",
-      metadata_json: null,
-      created_at: new Date().toISOString(),
-    };
-  
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
-    setComplaintFormOpen(true);
-    setSelectedCategory(null);
+    appendComplaintFlow("Хочу надіслати скаргу");
   }
 
   function handleComplaintSuccess() {
