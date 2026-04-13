@@ -22,7 +22,7 @@ export default function ChatWindow() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
-  const [complaintMode, setComplaintMode] = useState(false);
+  const [complaintFormOpen, setComplaintFormOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -114,7 +114,7 @@ export default function ChatWindow() {
       ]);
 
       setSelectedCategory(null);
-      setComplaintMode(false);
+      setComplaintFormOpen(false);
     } catch (err) {
       console.error("Send message error:", err);
       setError("Не вдалося отримати відповідь від сервера.");
@@ -149,9 +149,26 @@ export default function ChatWindow() {
     setMessages((prev) => [...prev, farewellMessage]);
     setChatEnded(true);
     setSelectedCategory(null);
-    setComplaintMode(false);
+    setComplaintFormOpen(false);
     setMenuOpen(false);
     localStorage.setItem(CHAT_ENDED_KEY, "true");
+  }
+
+  function openComplaintForm() {
+    const assistantMessage: ChatMessage = {
+      id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "assistant",
+      message_text:
+        "Звісно. Заповніть, будь ласка, форму скарги нижче, і ми передамо її в підтримку.",
+      detected_intent: "complaint_form_open",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+    setComplaintFormOpen(true);
+    setSelectedCategory(null);
   }
 
   function handleComplaintSuccess() {
@@ -167,12 +184,12 @@ export default function ChatWindow() {
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
-    setComplaintMode(false);
+    setComplaintFormOpen(false);
     setSelectedCategory(null);
   }
 
   function renderMenu() {
-    if (chatEnded || complaintMode) return null;
+    if (chatEnded) return null;
 
     if (selectedCategory) {
       const items = groupedFaq[selectedCategory] || [];
@@ -213,19 +230,16 @@ export default function ChatWindow() {
             key={item.category}
             onClick={() => setSelectedCategory(item.category)}
             className="quick-action-btn"
-            disabled={loading || initializing}
+            disabled={loading || initializing || complaintFormOpen}
           >
             {item.label}
           </button>
         ))}
 
         <button
-          onClick={() => {
-            setComplaintMode(true);
-            setSelectedCategory(null);
-          }}
+          onClick={openComplaintForm}
           className="quick-action-btn complaint-btn"
-          disabled={loading || initializing}
+          disabled={loading || initializing || complaintFormOpen}
         >
           Скарга
         </button>
@@ -271,36 +285,46 @@ export default function ChatWindow() {
       <div className="chat-body">
         {initializing ? (
           <div className="chat-placeholder">Завантаження історії чату...</div>
-        ) : complaintMode ? (
-          <ComplaintForm
-            onSuccess={handleComplaintSuccess}
-            onCancel={() => setComplaintMode(false)}
-          />
-        ) : messages.length === 0 ? (
-          <div className="chat-placeholder">
-            Оберіть категорію вище або напишіть своє запитання.
-          </div>
         ) : (
-          <MessageList messages={messages} />
+          <>
+            {messages.length === 0 ? (
+              <div className="chat-placeholder">
+                Оберіть категорію вище або напишіть своє запитання.
+              </div>
+            ) : (
+              <MessageList messages={messages} />
+            )}
+
+            {complaintFormOpen && !chatEnded && (
+              <div className="complaint-inline-wrap">
+                <ComplaintForm
+                  onSuccess={handleComplaintSuccess}
+                  onCancel={() => setComplaintFormOpen(false)}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {!chatEnded && !complaintMode ? (
+      {!chatEnded && (
         <div className="chat-footer">
           <MessageInput
             onSend={handleSend}
-            disabled={loading || !sessionId || initializing}
+            disabled={loading || !sessionId || initializing || complaintFormOpen}
           />
           {loading && <p className="chat-status">Асистент думає...</p>}
           {error && <p className="chat-error">{error}</p>}
         </div>
-      ) : chatEnded ? (
+      )}
+
+      {chatEnded && (
         <div className="chat-ended-footer">
           <button className="new-chat-after-end-btn" onClick={resetChatSession}>
             Новий чат
           </button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

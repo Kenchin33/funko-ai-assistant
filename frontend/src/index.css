@@ -513,3 +513,16 @@ input {
 .complaint-submit-btn {
   transition: transform 0.2s ease, filter 0.2s ease;
 }
+
+.complaint-inline-wrap {
+  padding: 0 18px 18px;
+}
+
+.complaint-inline-card {
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #e9d5ff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.08);
+}

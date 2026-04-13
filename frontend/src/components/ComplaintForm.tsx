@@ -49,7 +49,7 @@ export default function ComplaintForm({
   }
 
   return (
-    <div className="complaint-form-wrap">
+    <div className="complaint-inline-card">
       <div className="complaint-form-header">
         <h3>Подати скаргу</h3>
         <p>Заповніть форму нижче, і ми розглянемо ваше звернення.</p>
@@ -74,7 +74,7 @@ export default function ComplaintForm({
 
         <input
           type="text"
-          placeholder="Номер замовлення"
+          placeholder="Номер замовлення (опціонально)"
           value={orderNumber}
           onChange={(e) => setOrderNumber(e.target.value)}
           className="complaint-input"
