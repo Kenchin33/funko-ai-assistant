@@ -3,6 +3,7 @@ import { createChatSession, getChatMessages, sendMessage } from "../api/chatApi"
 import { getFaqItems } from "../api/faqApi";
 import type { ChatMessage } from "../types/chat";
 import type { FAQItem } from "../types/faq";
+import ComplaintForm from "./ComplaintForm";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
@@ -14,13 +15,14 @@ export default function ChatWindow() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
   const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
+  const [complaintMode, setComplaintMode] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -112,6 +114,7 @@ export default function ChatWindow() {
       ]);
 
       setSelectedCategory(null);
+      setComplaintMode(false);
     } catch (err) {
       console.error("Send message error:", err);
       setError("Не вдалося отримати відповідь від сервера.");
@@ -146,12 +149,30 @@ export default function ChatWindow() {
     setMessages((prev) => [...prev, farewellMessage]);
     setChatEnded(true);
     setSelectedCategory(null);
+    setComplaintMode(false);
     setMenuOpen(false);
     localStorage.setItem(CHAT_ENDED_KEY, "true");
   }
 
+  function handleComplaintSuccess() {
+    const assistantMessage: ChatMessage = {
+      id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "assistant",
+      message_text:
+        "Вашу скаргу отримано. Ми вже працюємо над її розглядом. Чи можу я ще чимось допомогти?",
+      detected_intent: "complaint_submitted",
+      metadata_json: null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+    setComplaintMode(false);
+    setSelectedCategory(null);
+  }
+
   function renderMenu() {
-    if (chatEnded) return null;
+    if (chatEnded || complaintMode) return null;
 
     if (selectedCategory) {
       const items = groupedFaq[selectedCategory] || [];
@@ -197,6 +218,17 @@ export default function ChatWindow() {
             {item.label}
           </button>
         ))}
+
+        <button
+          onClick={() => {
+            setComplaintMode(true);
+            setSelectedCategory(null);
+          }}
+          className="quick-action-btn complaint-btn"
+          disabled={loading || initializing}
+        >
+          Скарга
+        </button>
       </div>
     );
   }
@@ -239,6 +271,11 @@ export default function ChatWindow() {
       <div className="chat-body">
         {initializing ? (
           <div className="chat-placeholder">Завантаження історії чату...</div>
+        ) : complaintMode ? (
+          <ComplaintForm
+            onSuccess={handleComplaintSuccess}
+            onCancel={() => setComplaintMode(false)}
+          />
         ) : messages.length === 0 ? (
           <div className="chat-placeholder">
             Оберіть категорію вище або напишіть своє запитання.
@@ -248,7 +285,7 @@ export default function ChatWindow() {
         )}
       </div>
 
-      {!chatEnded ? (
+      {!chatEnded && !complaintMode ? (
         <div className="chat-footer">
           <MessageInput
             onSend={handleSend}
@@ -257,13 +294,13 @@ export default function ChatWindow() {
           {loading && <p className="chat-status">Асистент думає...</p>}
           {error && <p className="chat-error">{error}</p>}
         </div>
-      ) : (
+      ) : chatEnded ? (
         <div className="chat-ended-footer">
           <button className="new-chat-after-end-btn" onClick={resetChatSession}>
             Новий чат
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
