@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.complaint import Complaint
 from app.models.complaint_attachment import ComplaintAttachment
+from app.services.email_service import EmailService
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
@@ -66,4 +67,11 @@ class ComplaintService:
 
         db.commit()
         db.refresh(complaint)
+
+        try:
+            EmailService.send_complaint_to_support(complaint)
+            EmailService.send_complaint_confirmation_to_client(complaint)
+        except Exception as exc:
+            print("EMAIL ERROR:", exc)
+
         return complaint

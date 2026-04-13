@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str | None = None
     OPENROUTER_MODEL: str = "openrouter/free"
 
+    SUPPORT_EMAIL: str = "funkohunter0@gmail.com"
+
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str
+    SMTP_PASSWORD: str
+    SMTP_FROM_EMAIL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
