@@ -1,9 +1,14 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createComplaint } from "../api/complaintApi";
 
 interface ComplaintFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+}
+
+interface PreviewFile {
+  file: File;
+  previewUrl: string;
 }
 
 const MAX_FILES = 3;
@@ -16,12 +21,18 @@ export default function ComplaintForm({
   const [email, setEmail] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [message, setMessage] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<PreviewFile[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      files.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+  }, [files]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +56,7 @@ export default function ComplaintForm({
         email,
         orderNumber,
         message,
-        files,
+        files: files.map((item) => item.file),
       });
 
       onSuccess();
@@ -66,20 +77,33 @@ export default function ComplaintForm({
 
     if (!selectedFiles.length) return;
 
-    const nextFiles = [...files, ...selectedFiles].slice(0, MAX_FILES);
-    setFiles(nextFiles);
+    const nextItems = selectedFiles.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
 
-    if (selectedFiles.length + files.length > MAX_FILES) {
+    const combined = [...files, ...nextItems];
+
+    if (combined.length > MAX_FILES) {
+      nextItems.forEach((item) => URL.revokeObjectURL(item.previewUrl));
       setError("Можна додати максимум 3 фото.");
-    } else {
-      setError("");
+      e.target.value = "";
+      return;
     }
 
+    setFiles(combined);
+    setError("");
     e.target.value = "";
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const target = prev[index];
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   return (
@@ -148,17 +172,25 @@ export default function ComplaintForm({
         </div>
 
         {files.length > 0 && (
-          <div className="complaint-files-list">
-            {files.map((file, index) => (
-              <div key={`${file.name}-${index}`} className="complaint-file-chip">
-                <span>{file.name}</span>
-                <button
-                  type="button"
-                  className="complaint-file-remove-btn"
-                  onClick={() => removeFile(index)}
-                >
-                  ×
-                </button>
+          <div className="complaint-preview-grid">
+            {files.map((item, index) => (
+              <div key={`${item.file.name}-${index}`} className="complaint-preview-card">
+                <img
+                  src={item.previewUrl}
+                  alt={item.file.name}
+                  className="complaint-preview-image"
+                />
+
+                <div className="complaint-preview-info">
+                  <span className="complaint-preview-name">{item.file.name}</span>
+                  <button
+                    type="button"
+                    className="complaint-file-remove-btn"
+                    onClick={() => removeFile(index)}
+                  >
+                    Видалити
+                  </button>
+                </div>
               </div>
             ))}
           </div>
