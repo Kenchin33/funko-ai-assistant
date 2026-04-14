@@ -23,6 +23,7 @@ export default function AdminComplaintsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeStatus, setActiveStatus] = useState<ComplaintStatus>("new");
+  const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
 
@@ -54,9 +55,25 @@ export default function AdminComplaintsPage() {
     navigate("/admin");
   }
 
+  const normalizedSearch = search.trim().toLowerCase();
+
   const filteredComplaints = useMemo(() => {
-    return complaints.filter((complaint) => complaint.status === activeStatus);
-  }, [complaints, activeStatus]);
+    return complaints
+      .filter((complaint) => complaint.status === activeStatus)
+      .filter((complaint) => {
+        if (!normalizedSearch) return true;
+
+        const complaintId = String(complaint.id).toLowerCase();
+        const email = complaint.email.toLowerCase();
+        const orderNumber = (complaint.order_number || "").toLowerCase();
+
+        return (
+          complaintId.includes(normalizedSearch) ||
+          email.includes(normalizedSearch) ||
+          orderNumber.includes(normalizedSearch)
+        );
+      });
+  }, [complaints, activeStatus, normalizedSearch]);
 
   const counts = useMemo(() => {
     return {
@@ -105,9 +122,20 @@ export default function AdminComplaintsPage() {
             ))}
           </div>
 
+          <div className="admin-search-wrap">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Пошук по email, номеру замовлення або номеру скарги..."
+              className="admin-search-input"
+            />
+          </div>
+
           {filteredComplaints.length === 0 ? (
             <div className="admin-empty-section">
-              У категорії “{statusTabs.find((t) => t.status === activeStatus)?.title}” скарг поки немає.
+              Нічого не знайдено у категорії “
+              {statusTabs.find((t) => t.status === activeStatus)?.title}”.
             </div>
           ) : (
             <div className="admin-complaints-list">

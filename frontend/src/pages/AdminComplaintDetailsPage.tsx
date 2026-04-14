@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getAdminComplaintById,
@@ -9,18 +9,18 @@ import {
 
 const ADMIN_UNLOCK_KEY = "funko_admin_unlocked";
 
-const statusOptions: { value: ComplaintStatus; label: string }[] = [
-  { value: "new", label: "Нова" },
-  { value: "in_progress", label: "В роботі" },
-  { value: "resolved", label: "Вирішена" },
-  { value: "rejected", label: "Відхилена" },
-];
-
 const statusLabels: Record<ComplaintStatus, string> = {
   new: "Нова",
   in_progress: "В роботі",
   resolved: "Вирішена",
   rejected: "Відхилена",
+};
+
+const allowedTransitions: Record<ComplaintStatus, ComplaintStatus[]> = {
+  new: ["in_progress"],
+  in_progress: ["resolved", "rejected"],
+  resolved: [],
+  rejected: [],
 };
 
 export default function AdminComplaintDetailsPage() {
@@ -56,10 +56,17 @@ export default function AdminComplaintDetailsPage() {
     loadComplaint();
   }, [id, navigate]);
 
+  const nextStatuses = useMemo(() => {
+    if (!complaint) return [];
+    return allowedTransitions[complaint.status];
+  }, [complaint]);
+
   async function handleStatusChange(newStatus: ComplaintStatus) {
     if (!complaint) return;
 
     setStatusLoading(true);
+    setError("");
+
     try {
       const updated = await updateAdminComplaintStatus(complaint.id, newStatus);
       setComplaint(updated);
@@ -138,20 +145,36 @@ export default function AdminComplaintDetailsPage() {
         <div className="admin-details-section">
           <strong>Статус:</strong>
           <div className="admin-status-row">
-            <select
-              value={complaint.status}
-              onChange={(e) => handleStatusChange(e.target.value as ComplaintStatus)}
-              className="admin-status-select"
-              disabled={statusLoading}
-            >
-              {statusOptions.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
+            {nextStatuses.length > 0 ? (
+              <>
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    const value = e.target.value as ComplaintStatus;
+                    if (value) {
+                      handleStatusChange(value);
+                    }
+                  }}
+                  className="admin-status-select"
+                  disabled={statusLoading}
+                >
+                  <option value="" disabled>
+                    Оберіть новий статус
+                  </option>
+                  {nextStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {statusLabels[status]}
+                    </option>
+                  ))}
+                </select>
 
-            {statusLoading && <span className="admin-status-saving">Збереження...</span>}
+                {statusLoading && <span className="admin-status-saving">Збереження...</span>}
+              </>
+            ) : (
+              <p className="admin-final-status-note">
+                Цей статус є фінальним і більше не може бути змінений.
+              </p>
+            )}
           </div>
         </div>
 
