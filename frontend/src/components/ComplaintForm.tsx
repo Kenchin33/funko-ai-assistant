@@ -6,6 +6,8 @@ interface ComplaintFormProps {
   onCancel: () => void;
 }
 
+const MAX_FILES = 3;
+
 export default function ComplaintForm({
   onSuccess,
   onCancel,
@@ -14,7 +16,7 @@ export default function ComplaintForm({
   const [email, setEmail] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [message, setMessage] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +31,11 @@ export default function ComplaintForm({
       return;
     }
 
+    if (files.length > MAX_FILES) {
+      setError("Можна додати максимум 3 фото.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -38,7 +45,7 @@ export default function ComplaintForm({
         email,
         orderNumber,
         message,
-        file,
+        files,
       });
 
       onSuccess();
@@ -52,6 +59,27 @@ export default function ComplaintForm({
 
   function handlePickFile() {
     fileInputRef.current?.click();
+  }
+
+  function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(e.target.files ?? []);
+
+    if (!selectedFiles.length) return;
+
+    const nextFiles = [...files, ...selectedFiles].slice(0, MAX_FILES);
+    setFiles(nextFiles);
+
+    if (selectedFiles.length + files.length > MAX_FILES) {
+      setError("Можна додати максимум 3 фото.");
+    } else {
+      setError("");
+    }
+
+    e.target.value = "";
+  }
+
+  function removeFile(index: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   return (
@@ -80,7 +108,7 @@ export default function ComplaintForm({
 
         <input
           type="text"
-          placeholder="Номер замовлення (опціонально) "
+          placeholder="Номер замовлення"
           value={orderNumber}
           onChange={(e) => setOrderNumber(e.target.value)}
           className="complaint-input"
@@ -99,7 +127,8 @@ export default function ComplaintForm({
             ref={fileInputRef}
             type="file"
             accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={handleFilesChange}
             className="complaint-file-input-hidden"
           />
 
@@ -108,13 +137,32 @@ export default function ComplaintForm({
             onClick={handlePickFile}
             className="complaint-pick-file-btn"
           >
-            Вибрати файл
+            Додати фото
           </button>
 
           <span className="complaint-file-name">
-            {file ? file.name : "Файл не вибрано"}
+            {files.length > 0
+              ? `Вибрано файлів: ${files.length}/3`
+              : "Фото не вибрано"}
           </span>
         </div>
+
+        {files.length > 0 && (
+          <div className="complaint-files-list">
+            {files.map((file, index) => (
+              <div key={`${file.name}-${index}`} className="complaint-file-chip">
+                <span>{file.name}</span>
+                <button
+                  type="button"
+                  className="complaint-file-remove-btn"
+                  onClick={() => removeFile(index)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {error && <p className="chat-error">{error}</p>}
 

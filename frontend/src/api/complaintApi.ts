@@ -9,7 +9,7 @@ export interface ComplaintPayload {
   email: string;
   orderNumber?: string;
   message: string;
-  file?: File | null;
+  files?: File[];
 }
 
 export async function createComplaint(payload: ComplaintPayload) {
@@ -23,8 +23,8 @@ export async function createComplaint(payload: ComplaintPayload) {
     formData.append("order_number", payload.orderNumber);
   }
 
-  if (payload.file) {
-    formData.append("file", payload.file);
+  for (const file of payload.files ?? []) {
+    formData.append("files", file);
   }
 
   const response = await api.post("/complaints", formData, {
