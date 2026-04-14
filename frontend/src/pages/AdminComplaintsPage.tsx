@@ -1,0 +1,107 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAdminComplaints, type ComplaintItem } from "../api/adminApi";
+
+const ADMIN_UNLOCK_KEY = "funko_admin_unlocked";
+
+export default function AdminComplaintsPage() {
+  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isUnlocked = localStorage.getItem(ADMIN_UNLOCK_KEY) === "true";
+
+    if (!isUnlocked) {
+      navigate("/admin");
+      return;
+    }
+
+    async function loadComplaints() {
+      try {
+        const data = await getAdminComplaints();
+        setComplaints(data);
+      } catch (err) {
+        console.error("Failed to load complaints:", err);
+        setError("Не вдалося завантажити список скарг.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadComplaints();
+  }, [navigate]);
+
+  function handleLogout() {
+    localStorage.removeItem(ADMIN_UNLOCK_KEY);
+    navigate("/admin");
+  }
+
+  return (
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div>
+          <h1>Скарги клієнтів</h1>
+          <p>Тимчасова адмін-панель</p>
+        </div>
+
+        <button onClick={handleLogout} className="admin-logout-btn">
+          Вийти
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="admin-info-box">Завантаження скарг...</div>
+      ) : error ? (
+        <div className="admin-error-box">{error}</div>
+      ) : complaints.length === 0 ? (
+        <div className="admin-info-box">Скарг поки немає.</div>
+      ) : (
+        <div className="admin-complaints-list">
+          {complaints.map((complaint) => (
+            <div key={complaint.id} className="admin-complaint-card">
+              <div className="admin-complaint-top">
+                <div>
+                  <h3>Скарга #{complaint.id}</h3>
+                  <p>
+                    <strong>Клієнт:</strong> {complaint.full_name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {complaint.email}
+                  </p>
+                  <p>
+                    <strong>Замовлення:</strong>{" "}
+                    {complaint.order_number || "не вказано"}
+                  </p>
+                </div>
+
+                <span className={`status-badge status-${complaint.status}`}>
+                  {complaint.status}
+                </span>
+              </div>
+
+              <div className="admin-complaint-body">
+                <p>
+                  <strong>Текст скарги:</strong>
+                </p>
+                <p>{complaint.message}</p>
+              </div>
+
+              <div className="admin-complaint-footer">
+                <p>
+                  <strong>Вкладення:</strong> {complaint.attachments.length}
+                </p>
+                <p>
+                  <strong>Створено:</strong>{" "}
+                  {new Date(complaint.created_at).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
