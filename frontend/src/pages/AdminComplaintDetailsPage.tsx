@@ -9,12 +9,19 @@ import {
 
 const ADMIN_UNLOCK_KEY = "funko_admin_unlocked";
 
-const statusOptions: ComplaintStatus[] = [
-  "new",
-  "in_progress",
-  "resolved",
-  "rejected",
+const statusOptions: { value: ComplaintStatus; label: string }[] = [
+  { value: "new", label: "Нова" },
+  { value: "in_progress", label: "В роботі" },
+  { value: "resolved", label: "Вирішена" },
+  { value: "rejected", label: "Відхилена" },
 ];
+
+const statusLabels: Record<ComplaintStatus, string> = {
+  new: "Нова",
+  in_progress: "В роботі",
+  resolved: "Вирішена",
+  rejected: "Відхилена",
+};
 
 export default function AdminComplaintDetailsPage() {
   const { id } = useParams();
@@ -97,7 +104,7 @@ export default function AdminComplaintDetailsPage() {
           </div>
 
           <span className={`status-badge status-${complaint.status}`}>
-            {complaint.status}
+            {statusLabels[complaint.status]}
           </span>
         </div>
 
@@ -138,8 +145,8 @@ export default function AdminComplaintDetailsPage() {
               disabled={statusLoading}
             >
               {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
+                <option key={status.value} value={status.value}>
+                  {status.label}
                 </option>
               ))}
             </select>

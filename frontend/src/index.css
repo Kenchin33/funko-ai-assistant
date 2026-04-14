@@ -891,3 +891,39 @@ input {
   padding: 16px;
   color: #6b7280;
 }
+
+.admin-status-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.admin-status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid #ddd6fe;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #5b21b6;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.admin-status-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(76, 29, 149, 0.08);
+}
+
+.admin-status-tab.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  color: #ffffff;
+}
+
+.admin-status-tab.active .status-counter {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
