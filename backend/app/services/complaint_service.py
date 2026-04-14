@@ -1,5 +1,6 @@
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.complaint import Complaint
 from app.models.complaint_attachment import ComplaintAttachment
@@ -66,12 +67,62 @@ class ComplaintService:
             db.add(attachment)
 
         db.commit()
-        db.refresh(complaint)
+
+        stmt = (
+            select(Complaint)
+            .options(selectinload(Complaint.attachments))
+            .where(Complaint.id == complaint.id)
+        )
+        complaint = db.scalar(stmt)
 
         try:
-            EmailService.send_complaint_to_support(complaint)
-            EmailService.send_complaint_confirmation_to_client(complaint)
+            if complaint is not None:
+                EmailService.send_complaint_to_support(complaint)
+                EmailService.send_complaint_confirmation_to_client(complaint)
         except Exception as exc:
             print("EMAIL ERROR:", exc)
 
+        if complaint is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Complaint was created but could not be reloaded.",
+            )
+
         return complaint
+
+    @staticmethod
+    def get_all(db: Session) -> list[Complaint]:
+        stmt = (
+            select(Complaint)
+            .options(selectinload(Complaint.attachments))
+            .order_by(Complaint.created_at.desc(), Complaint.id.desc())
+        )
+        return list(db.scalars(stmt).all())
+
+    @staticmethod
+    def get_by_id(db: Session, complaint_id: int) -> Complaint | None:
+        stmt = (
+            select(Complaint)
+            .options(selectinload(Complaint.attachments))
+            .where(Complaint.id == complaint_id)
+        )
+        return db.scalar(stmt)
+
+    @staticmethod
+    def update_status(db: Session, complaint: Complaint, new_status: str) -> Complaint:
+        complaint.status = new_status
+        db.add(complaint)
+        db.commit()
+
+        stmt = (
+            select(Complaint)
+            .options(selectinload(Complaint.attachments))
+            .where(Complaint.id == complaint.id)
+        )
+        refreshed = db.scalar(stmt)
+        if refreshed is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Complaint status updated but could not be reloaded.",
+            )
+        return refreshed
