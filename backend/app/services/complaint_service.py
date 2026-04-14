@@ -9,6 +9,7 @@ from app.services.email_service import EmailService
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_FILES_COUNT = 3
 
 ALLOWED_STATUS_TRANSITIONS = {
     "new": {"in_progress"},
@@ -35,7 +36,7 @@ class ComplaintService:
         if file_size > MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File size must not exceed 5 MB.",
+                detail="Each file size must not exceed 5 MB.",
             )
 
         return file_name, mime_type, file_size
@@ -49,6 +50,14 @@ class ComplaintService:
         order_number: str | None = None,
         files: list[UploadFile] | None = None,
     ) -> Complaint:
+        files = files or []
+
+        if len(files) > MAX_FILES_COUNT:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You can upload a maximum of 3 files.",
+            )
+
         complaint = Complaint(
             full_name=full_name,
             email=email,
@@ -60,7 +69,7 @@ class ComplaintService:
         db.add(complaint)
         db.flush()
 
-        for file in files or []:
+        for file in files:
             content = file.file.read()
             file_name, mime_type, file_size = ComplaintService._validate_file(file, content)
 
