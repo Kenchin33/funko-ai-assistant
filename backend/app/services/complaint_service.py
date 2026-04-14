@@ -10,6 +10,13 @@ ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
+ALLOWED_STATUS_TRANSITIONS = {
+    "new": {"in_progress"},
+    "in_progress": {"resolved", "rejected"},
+    "resolved": set(),
+    "rejected": set(),
+}
+
 
 class ComplaintService:
     @staticmethod
@@ -110,6 +117,21 @@ class ComplaintService:
 
     @staticmethod
     def update_status(db: Session, complaint: Complaint, new_status: str) -> Complaint:
+        current_status = complaint.status
+
+        if new_status == current_status:
+            return complaint
+
+        allowed_next_statuses = ALLOWED_STATUS_TRANSITIONS.get(current_status, set())
+
+        if new_status not in allowed_next_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Status transition from '{current_status}' to '{new_status}' is not allowed."
+                ),
+            )
+
         complaint.status = new_status
         db.add(complaint)
         db.commit()
