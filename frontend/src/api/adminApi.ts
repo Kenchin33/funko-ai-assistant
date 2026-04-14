@@ -29,3 +29,18 @@ export async function getAdminComplaints(): Promise<ComplaintItem[]> {
   const response = await api.get<ComplaintItem[]>("/admin/complaints");
   return response.data;
 }
+
+export async function getAdminComplaintById(id: number): Promise<ComplaintItem> {
+  const response = await api.get<ComplaintItem>(`/admin/complaints/${id}`);
+  return response.data;
+}
+
+export async function updateAdminComplaintStatus(
+  id: number,
+  status: ComplaintStatus
+): Promise<ComplaintItem> {
+  const response = await api.patch<ComplaintItem>(`/admin/complaints/${id}/status`, {
+    status,
+  });
+  return response.data;
+}

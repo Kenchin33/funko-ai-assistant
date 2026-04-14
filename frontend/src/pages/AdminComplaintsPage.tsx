@@ -61,7 +61,11 @@ export default function AdminComplaintsPage() {
       ) : (
         <div className="admin-complaints-list">
           {complaints.map((complaint) => (
-            <div key={complaint.id} className="admin-complaint-card">
+            <button
+              key={complaint.id}
+              className="admin-complaint-card admin-complaint-card-button"
+              onClick={() => navigate(`/admin/complaints/${complaint.id}`)}
+            >
               <div className="admin-complaint-top">
                 <div>
                   <h3>Скарга #{complaint.id}</h3>
@@ -98,7 +102,7 @@ export default function AdminComplaintsPage() {
                   {new Date(complaint.created_at).toLocaleString()}
                 </p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
