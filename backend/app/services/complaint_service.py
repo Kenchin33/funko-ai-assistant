@@ -6,6 +6,8 @@ from app.models.complaint import Complaint
 from app.models.complaint_attachment import ComplaintAttachment
 from app.services.email_service import EmailService
 
+from app.integrations.shop_api_client import ShopApiClient
+
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
@@ -97,6 +99,25 @@ class ComplaintService:
                 EmailService.send_complaint_confirmation_to_client(complaint)
         except Exception as exc:
             print("EMAIL ERROR:", exc)
+        
+                try:
+            shop_payload = {
+                "email": complaint.email,
+                "order_number": complaint.order_number,
+                "complaint_number": f"CMP-{complaint.id}",
+                "topic": "Скарга від клієнта",
+                "message": complaint.message,
+                "photos": [
+                    {
+                        "image_url": f"/complaints/attachments/{attachment.id}"
+                    }
+                    for attachment in complaint.attachments
+                ],
+                "source": "assistant",
+            }
+            ShopApiClient.create_shop_complaint(shop_payload)
+        except Exception as exc:
+            print("SHOP COMPLAINT SYNC ERROR:", exc)
 
         if complaint is None:
             raise HTTPException(

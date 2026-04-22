@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str
     SMTP_FROM_EMAIL: str
 
+    SHOP_API_BASE_URL: str
+    SHOP_ASSISTANT_API_KEY: str
+    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

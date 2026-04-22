@@ -33,7 +33,7 @@ class ChatReplyService:
                     {
                         "type": "link",
                         "label": "Відкрити товар",
-                        "url": product.url,
+                        "url": f"/product/{product['slug']}",
                     }
                 ]
 
@@ -42,10 +42,10 @@ class ChatReplyService:
                     session_id=session_id,
                     payload=ChatMessageCreate(
                         role="assistant",
-                        message_text=f"Так, знайшов фігурку:\n{product.title}",
+                        message_text=f"Так, знайшов фігурку:\n{product['name']}",
                         detected_intent="product_exact",
                         metadata_json={
-                            "product_id": product.id,
+                            "product_slug": product["slug"],
                             "actions": actions,
                         },
                     ),
@@ -103,6 +103,7 @@ class ChatReplyService:
                         detected_intent="product_search",
                         metadata_json={
                             "products_found": len(products),
+                            "product_slugs": [product["slug"] for product in products[:5]],
                             "actions": actions,
                         },
                     ),

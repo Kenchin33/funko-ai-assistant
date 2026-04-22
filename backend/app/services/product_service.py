@@ -1,55 +1,10 @@
-from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
-
-from app.models.product import Product
-from app.schemas.product import ProductCreate, ProductUpdate
-from app.utils.text import normalize_text
-from app.services.product_alias_service import ProductAliasService
+from app.integrations.shop_api_client import ShopApiClient
 
 
 class ProductService:
     @staticmethod
-    def create(db: Session, payload: ProductCreate) -> Product:
-        product = Product(**payload.model_dump())
-        db.add(product)
-        db.commit()
-        db.refresh(product)
-        return product
-
-    @staticmethod
-    def get_all(db: Session) -> list[Product]:
-        stmt = (
-            select(Product)
-            .where(Product.is_active.is_(True))
-            .order_by(Product.in_stock.desc(), Product.id.asc())
-        )
-        return list(db.scalars(stmt).all())
-
-    @staticmethod
-    def get_by_id(db: Session, product_id: int) -> Product | None:
-        stmt = select(Product).where(Product.id == product_id)
-        return db.scalar(stmt)
-
-    @staticmethod
-    def update(db: Session, product: Product, payload: ProductUpdate) -> Product:
-        update_data = payload.model_dump(exclude_unset=True)
-
-        for field, value in update_data.items():
-            setattr(product, field, value)
-
-        db.add(product)
-        db.commit()
-        db.refresh(product)
-        return product
-
-    @staticmethod
-    def delete(db: Session, product: Product) -> None:
-        db.delete(product)
-        db.commit()
-
-    @staticmethod
     def _clean_search_query(query: str) -> str:
-        normalized = normalize_text(query)
+        normalized = query.strip().lower()
 
         noise_phrases = [
             "які є фігурки по",
@@ -74,40 +29,44 @@ class ProductService:
         return cleaned
 
     @staticmethod
-    def search(db: Session, query: str) -> list[Product]:
-        aliases = ProductAliasService.find_alias_matches(db, query)
-
-        filters = []
-
-        for alias in aliases:
-            if alias.target_type == "character":
-                filters.append(Product.character_name.ilike(f"%{alias.target_value}%"))
-
-            elif alias.target_type == "franchise":
-                filters.append(Product.franchise.ilike(f"%{alias.target_value}%"))
-
-            elif alias.target_type == "series":
-                filters.append(Product.series.ilike(f"%{alias.target_value}%"))
-
-        if filters:
-            stmt = (
-                select(Product)
-                .where(Product.is_active.is_(True))
-                .where(or_(*filters))
-                .order_by(Product.in_stock.desc(), Product.id.asc())
-            )
-            return list(db.scalars(stmt).all())
-
-        # fallback — старий пошук
-        return []
+    def get_all() -> list[dict]:
+        return ShopApiClient.search_products(q="", limit=50)
 
     @staticmethod
-    def exact_lookup(db: Session, query: str) -> Product | None:
-        aliases = ProductAliasService.find_alias_matches(db, query)
+    def get_by_slug(slug: str) -> dict | None:
+        try:
+            return ShopApiClient.get_product_by_slug(slug)
+        except Exception:
+            return None
 
-        for alias in aliases:
-            if alias.target_type == "product" and alias.product_id:
-                stmt = select(Product).where(Product.id == alias.product_id)
-                return db.scalar(stmt)
+    @staticmethod
+    def search(query: str) -> list[dict]:
+        cleaned_query = ProductService._clean_search_query(query)
+        return ShopApiClient.search_products(q=cleaned_query, limit=10)
 
-        return None
+    @staticmethod
+    def exact_lookup(query: str) -> dict | None:
+        cleaned_query = ProductService._clean_search_query(query)
+        products = ShopApiClient.search_products(q=cleaned_query, limit=10)
+
+        if not products:
+            return None
+
+        normalized_query = cleaned_query.lower()
+
+        for product in products:
+            name = (product.get("name") or "").lower()
+            slug = (product.get("slug") or "").lower()
+            product_number = (product.get("product_number") or "").lower()
+            series = (product.get("series") or "").lower()
+
+            if normalized_query in name or normalized_query in slug:
+                return product
+
+            if product_number and normalized_query == product_number:
+                return product
+
+            if series and normalized_query in series and len(products) == 1:
+                return product
+
+        return products[0]
