@@ -19,7 +19,7 @@ def create_complaint(
     email: EmailStr = Form(...),
     message: str = Form(...),
     order_number: str | None = Form(None),
-    files: list[UploadFile] = File(default=[]),
+    files: list[UploadFile] | None = File(default=None),
     db: Session = Depends(get_db),
 ):
     return ComplaintService.create_complaint(

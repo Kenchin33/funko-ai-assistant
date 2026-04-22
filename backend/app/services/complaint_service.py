@@ -100,7 +100,7 @@ class ComplaintService:
         except Exception as exc:
             print("EMAIL ERROR:", exc)
         
-                try:
+        try:
             shop_payload = {
                 "email": complaint.email,
                 "order_number": complaint.order_number,
@@ -117,7 +117,10 @@ class ComplaintService:
             }
             ShopApiClient.create_shop_complaint(shop_payload)
         except Exception as exc:
-            print("SHOP COMPLAINT SYNC ERROR:", exc)
+            print("SHOP COMPLAINT SYNC ERROR:", repr(exc))
+            if hasattr(exc, "response") and exc.response is not None:
+                print("SHOP STATUS:", exc.response.status_code)
+                print("SHOP BODY:", exc.response.text)
 
         if complaint is None:
             raise HTTPException(

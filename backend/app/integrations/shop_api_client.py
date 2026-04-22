@@ -48,7 +48,7 @@ class ShopApiClient:
         return response.json()
 
     @staticmethod
-    def create_complaint(payload: dict) -> dict:
+    def create_shop_complaint(payload: dict) -> dict:
         response = requests.post(
             f"{settings.SHOP_API_BASE_URL}/assistant/complaints",
             headers=ShopApiClient._headers(),
