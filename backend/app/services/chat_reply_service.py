@@ -205,6 +205,7 @@ class ChatReplyService:
 
         # ---------------- LLM FALLBACK ----------------
         llm = LLMService()
+
         ai_text, provider = llm.generate_reply(message_text)
 
         assistant_message = ChatService.create_message(

@@ -52,7 +52,7 @@ class ProductService:
         if not products:
             return None
 
-        normalized_query = cleaned_query.lower()
+        normalized = normalize_text(query)
 
         for product in products:
             name = (product.get("name") or "").lower()
