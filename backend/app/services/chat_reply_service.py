@@ -26,7 +26,7 @@ class ChatReplyService:
 
         # ---------------- PRODUCT EXACT ----------------
         if intent == IntentType.PRODUCT_EXACT:
-            product = ProductService.exact_lookup(db, message_text)
+            product = ProductService.exact_lookup(message_text)
 
             if product:
                 actions = [
@@ -83,7 +83,7 @@ class ChatReplyService:
 
         # ---------------- PRODUCT SEARCH ----------------
         if intent == IntentType.PRODUCT_SEARCH:
-            products = ProductService.search(db, message_text)
+            products = ProductService.search(message_text)
 
             if products:
                 actions = [
@@ -205,8 +205,7 @@ class ChatReplyService:
 
         # ---------------- LLM FALLBACK ----------------
         llm = LLMService()
-
-        ai_text = llm.generate_reply(message_text)
+        ai_text, provider = llm.generate_reply(message_text)
 
         assistant_message = ChatService.create_message(
             db=db,
@@ -216,7 +215,7 @@ class ChatReplyService:
                 message_text=ai_text,
                 detected_intent="llm_fallback",
                 metadata_json={
-                    "model": "gemini",
+                    "model": provider,
                 },
             ),
         )
