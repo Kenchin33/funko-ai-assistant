@@ -7,8 +7,6 @@ const api = axios.create({
 
 export async function createChatSession() {
   const res = await api.post("/chat/sessions", {
-    user_name: null,
-    user_email: null,
     source: "web_app",
   });
 

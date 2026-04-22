@@ -58,7 +58,15 @@ export default function ComplaintForm({
         message,
         files: files.map((item) => item.file),
       });
-
+    
+      setError("");
+      files.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      setFiles([]);
+      setFullName("");
+      setEmail("");
+      setOrderNumber("");
+      setMessage("");
+    
       onSuccess();
     } catch (err) {
       console.error("Complaint submit error:", err);

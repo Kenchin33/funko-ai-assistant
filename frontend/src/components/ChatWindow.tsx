@@ -28,40 +28,46 @@ export default function ChatWindow() {
 
   useEffect(() => {
     async function init() {
+      setInitializing(true);
+      setError("");
+  
+      const ended = localStorage.getItem(CHAT_ENDED_KEY) === "true";
+      setChatEnded(ended);
+  
       try {
         const faqs = await getFaqItems();
         setFaqItems(faqs);
-
-        const ended = localStorage.getItem(CHAT_ENDED_KEY) === "true";
-        setChatEnded(ended);
-
+      } catch (err) {
+        console.error("FAQ load error:", err);
+      }
+  
+      try {
         const savedSessionId = localStorage.getItem(CHAT_SESSION_KEY);
-
+  
         if (savedSessionId) {
           const numericSessionId = Number(savedSessionId);
-
+  
           if (!Number.isNaN(numericSessionId)) {
             setSessionId(numericSessionId);
-
+  
             const history = await getChatMessages(numericSessionId);
             setMessages(history);
-
-            setInitializing(false);
+  
             return;
           }
         }
-
+  
         const session = await createChatSession();
         setSessionId(session.id);
         localStorage.setItem(CHAT_SESSION_KEY, String(session.id));
       } catch (err) {
-        console.error("Init error:", err);
+        console.error("Chat init error:", err);
         setError("Не вдалося ініціалізувати чат.");
       } finally {
         setInitializing(false);
       }
     }
-
+  
     init();
   }, []);
 
@@ -225,7 +231,8 @@ export default function ChatWindow() {
       metadata_json: null,
       created_at: new Date().toISOString(),
     };
-
+  
+    setError("");
     setMessages((prev) => [...prev, assistantMessage]);
     setComplaintFormOpen(false);
     setSelectedCategory(null);
