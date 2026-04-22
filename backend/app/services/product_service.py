@@ -1,10 +1,13 @@
+import re
+
 from app.integrations.shop_api_client import ShopApiClient
+from app.utils.text import normalize_text
 
 
 class ProductService:
     @staticmethod
     def _clean_search_query(query: str) -> str:
-        normalized = query.strip().lower()
+        normalized = normalize_text(query)
 
         noise_phrases = [
             "які є фігурки по",
@@ -25,8 +28,9 @@ class ProductService:
         for phrase in noise_phrases:
             cleaned = cleaned.replace(phrase, " ")
 
+        cleaned = re.sub(r"[^\w\s-]", " ", cleaned)
         cleaned = " ".join(cleaned.split())
-        return cleaned
+        return cleaned.strip()
 
     @staticmethod
     def get_all() -> list[dict]:
@@ -52,7 +56,7 @@ class ProductService:
         if not products:
             return None
 
-        normalized = normalize_text(query)
+        normalized_query = cleaned_query.lower()
 
         for product in products:
             name = (product.get("name") or "").lower()
