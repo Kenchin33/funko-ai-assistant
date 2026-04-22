@@ -13,19 +13,22 @@ class ProductService:
             "які є фігурки по",
             "які є по",
             "що є по",
-            "покажи",
-            "знайди",
+            "чи є у вас фігурки",
+            "чи є у вас",
+            "чи є",
             "які є",
             "що є",
-            "є",
-            "чи є",
+            "покажи",
+            "знайди",
             "funko pop",
             "фігурки",
             "фігурка",
+            "є",
         ]
 
         cleaned = normalized
-        for phrase in noise_phrases:
+
+        for phrase in sorted(noise_phrases, key=len, reverse=True):
             cleaned = cleaned.replace(phrase, " ")
 
         cleaned = re.sub(r"[^\w\s-]", " ", cleaned)
