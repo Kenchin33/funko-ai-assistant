@@ -9,6 +9,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<ChatWindow />} />
+        <Route path="/widget" element={<ChatWindow />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
         <Route path="/admin/complaints/:id" element={<AdminComplaintDetailsPage />} />

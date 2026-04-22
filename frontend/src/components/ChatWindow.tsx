@@ -6,6 +6,7 @@ import type { FAQItem } from "../types/faq";
 import ComplaintForm from "./ComplaintForm";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import { useLocation } from "react-router-dom";
 
 const CHAT_SESSION_KEY = "funko_ai_session_id";
 const CHAT_ENDED_KEY = "funko_ai_chat_ended";
@@ -25,6 +26,9 @@ export default function ChatWindow() {
   const [complaintFormOpen, setComplaintFormOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const location = useLocation();
+  const isWidgetMode = location.pathname === "/widget";
 
   useEffect(() => {
     async function init() {
@@ -298,7 +302,7 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="chat-shell">
+    <div className={`chat-shell ${isWidgetMode ? "chat-shell-widget" : ""}`}>
       <div className="chat-header">
         <div className="chat-header-title">Funko AI Assistant</div>
 
