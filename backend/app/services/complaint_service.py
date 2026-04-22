@@ -1,6 +1,7 @@
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
+from app.core.config import settings
 
 from app.models.complaint import Complaint
 from app.models.complaint_attachment import ComplaintAttachment
@@ -109,7 +110,7 @@ class ComplaintService:
                 "message": complaint.message,
                 "photos": [
                     {
-                        "image_url": f"/complaints/attachments/{attachment.id}"
+                        "image_url": f"{settings.ASSISTANT_PUBLIC_BASE_URL}/api/complaints/attachments/{attachment.id}"
                     }
                     for attachment in complaint.attachments
                 ],

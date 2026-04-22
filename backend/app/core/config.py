@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     SHOP_API_BASE_URL: str
     SHOP_ASSISTANT_API_KEY: str
+
+    ASSISTANT_PUBLIC_BASE_URL: str
     
 
     model_config = SettingsConfigDict(
