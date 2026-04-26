@@ -22,13 +22,13 @@ def get_widget_script():
     position: "fixed",
     right: "20px",
     bottom: "20px",
-    width: "68px",
-    height: "68px",
+    width: "60px",
+    height: "60px",
     border: "none",
     borderRadius: "999px",
     background: "linear-gradient(135deg, #6D28D9, #9333EA)",
     color: "#ffffff",
-    fontSize: "28px",
+    fontSize: "26px",
     cursor: "pointer",
     zIndex: "999999",
     boxShadow: "0 12px 30px rgba(0,0,0,0.18)"
@@ -39,8 +39,8 @@ def get_widget_script():
     position: "fixed",
     right: "20px",
     bottom: "100px",
-    width: "460px",
-    height: "690px",
+    width: "480px",
+    height: "min(640px, calc(100vh - 120px))",
     background: "#ffffff",
     borderRadius: "24px",
     overflow: "hidden",
@@ -74,17 +74,17 @@ def get_widget_script():
       container.style.left = "12px";
       container.style.right = "12px";
       container.style.width = "auto";
-      container.style.height = "65vh";
-      container.style.bottom = "90px";
+      container.style.height = "calc(100vh - 95px)";
+      container.style.bottom = "80px";
 
       launcher.style.right = "16px";
       launcher.style.bottom = "16px";
     } else {
       container.style.left = "";
       container.style.right = "20px";
-      container.style.width = "460px";
-      container.style.height = "690px";
-      container.style.bottom = "100px";
+      container.style.width = "480px";
+      container.style.height = "min(640px, calc(100vh - 120px))";
+      container.style.bottom = "90px";
 
       launcher.style.right = "20px";
       launcher.style.bottom = "20px";
