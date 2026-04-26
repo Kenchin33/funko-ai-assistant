@@ -26,7 +26,7 @@ def get_widget_script():
     height: "68px",
     border: "none",
     borderRadius: "999px",
-    background: "#2b2b2b",
+    background: "linear-gradient(135deg, #6D28D9, #9333EA)",
     color: "#ffffff",
     fontSize: "28px",
     cursor: "pointer",
@@ -39,8 +39,8 @@ def get_widget_script():
     position: "fixed",
     right: "20px",
     bottom: "100px",
-    width: "380px",
-    height: "640px",
+    width: "460px",
+    height: "690px",
     background: "#ffffff",
     borderRadius: "24px",
     overflow: "hidden",
@@ -74,7 +74,7 @@ def get_widget_script():
       container.style.left = "12px";
       container.style.right = "12px";
       container.style.width = "auto";
-      container.style.height = "70vh";
+      container.style.height = "65vh";
       container.style.bottom = "90px";
 
       launcher.style.right = "16px";
@@ -82,14 +82,27 @@ def get_widget_script():
     } else {
       container.style.left = "";
       container.style.right = "20px";
-      container.style.width = "380px";
-      container.style.height = "640px";
+      container.style.width = "460px";
+      container.style.height = "690px";
       container.style.bottom = "100px";
 
       launcher.style.right = "20px";
       launcher.style.bottom = "20px";
     }
   }
+
+  window.addEventListener("message", function (event) {
+    const data = event.data;
+
+    if (!data || data.type !== "FUNKO_ASSISTANT_NAVIGATE") return;
+    if (typeof data.url !== "string") return;
+
+    if (data.url.startsWith("/")) {
+      window.location.href = data.url;
+      container.style.display = "none";
+      launcher.innerHTML = "💬";
+    }
+  });
 
   window.addEventListener("resize", handleResize);
   handleResize();
