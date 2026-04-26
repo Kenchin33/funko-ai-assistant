@@ -58,6 +58,25 @@ class ProductService:
     @staticmethod
     def exact_lookup(query: str) -> dict | None:
         cleaned_query = ProductService._clean_search_query(query)
+
+        number_match = re.search(r"\d+", cleaned_query)
+        product_number_query = number_match.group(0) if number_match else None
+
+        if product_number_query:
+            products_by_number = ShopApiClient.search_products(
+                q=product_number_query,
+                limit=10,
+            )
+
+            for product in products_by_number:
+                product_number = str(product.get("product_number") or "").lower()
+
+                if product_number == product_number_query:
+                    return product
+
+            if products_by_number:
+                return products_by_number[0]
+
         products = ShopApiClient.search_products(q=cleaned_query, limit=10)
 
         if not products:
@@ -68,7 +87,7 @@ class ProductService:
         for product in products:
             name = (product.get("name") or "").lower()
             slug = (product.get("slug") or "").lower()
-            product_number = (product.get("product_number") or "").lower()
+            product_number = str(product.get("product_number") or "").lower()
             series = (product.get("series") or "").lower()
 
             if normalized_query in name or normalized_query in slug:
