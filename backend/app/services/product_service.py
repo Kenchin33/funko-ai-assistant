@@ -16,7 +16,7 @@ class ProductService:
             "чи є у вас фігурки",
             "чи є у вас",
             "чи є",
-            "які є",
+            "які є по",
             "що є",
             "покажи",
             "знайди",
@@ -34,6 +34,10 @@ class ProductService:
         cleaned = re.sub(r"[^\w\s-]", " ", cleaned)
         cleaned = " ".join(cleaned.split())
         return cleaned.strip()
+    
+    @staticmethod
+    def clean_search_query(query: str) -> str:
+        return ProductService._clean_search_query(query)
 
     @staticmethod
     def get_all() -> list[dict]:

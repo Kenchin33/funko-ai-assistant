@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from urllib.parse import quote
 
 from app.schemas.chat import ChatMessageCreate
 from app.services.chat_service import ChatService
@@ -6,6 +7,7 @@ from app.services.faq_match_service import FAQMatchService
 from app.services.intent_service import IntentService, IntentType
 from app.services.product_service import ProductService
 from app.services.llm_service import LLMService
+
 
 
 class ChatReplyService:
@@ -83,6 +85,7 @@ class ChatReplyService:
 
         # ---------------- PRODUCT SEARCH ----------------
         if intent == IntentType.PRODUCT_SEARCH:
+            cleaned_query = ProductService.clean_search_query(message_text)
             products = ProductService.search(message_text)
 
             if products:
@@ -90,7 +93,7 @@ class ChatReplyService:
                     {
                         "type": "link",
                         "label": "Переглянути результати",
-                        "url": f"/search?q={message_text}",
+                        "url": f"/search?q={quote(cleaned_query)}",
                     }
                 ]
 
