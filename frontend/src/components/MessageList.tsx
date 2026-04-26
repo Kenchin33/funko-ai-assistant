@@ -20,18 +20,33 @@ function UserIcon() {
 function MessageActions({ actions }: { actions: ChatReplyAction[] }) {
   if (!actions.length) return null;
 
+  function handleActionClick(action: ChatReplyAction) {
+  
+    if (action.url.startsWith("/")) {
+      window.parent.postMessage(
+        {
+          type: "FUNKO_ASSISTANT_NAVIGATE",
+          url: action.url,
+        },
+        "*"
+      );
+      return;
+    }
+  
+    window.open(action.url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="message-actions">
       {actions.map((action, index) => (
-        <a
+        <button
           key={`${action.label}-${index}`}
-          href={action.url}
-          target="_blank"
-          rel="noreferrer"
+          type="button"
+          onClick={() => handleActionClick(action)}
           className="message-action-link"
         >
           {action.label}
-        </a>
+        </button>
       ))}
     </div>
   );
