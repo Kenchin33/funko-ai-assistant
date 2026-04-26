@@ -98,7 +98,13 @@ def get_widget_script():
     if (typeof data.url !== "string") return;
 
     if (data.url.startsWith("/")) {
-      window.location.href = data.url;
+      let targetUrl = data.url;
+
+      if (targetUrl === "/instock" || targetUrl === "/in-stock") {
+        targetUrl = "/search?status=in_stock";
+      }
+
+      window.location.href = targetUrl;
       container.style.display = "none";
       launcher.innerHTML = "💬";
     }
