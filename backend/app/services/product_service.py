@@ -62,27 +62,10 @@ class ProductService:
         number_match = re.search(r"\d+", cleaned_query)
         product_number_query = number_match.group(0) if number_match else None
 
-        def product_search_text(product: dict) -> str:
-            aliases = product.get("aliases") or []
-            alias_text = " ".join(
-                str(alias.get("alias") or "")
-                for alias in aliases
-                if isinstance(alias, dict)
-            )
-
-            return normalize_text(
-                " ".join(
-                    [
-                        str(product.get("name") or ""),
-                        str(product.get("slug") or ""),
-                        str(product.get("series") or ""),
-                        str(product.get("product_number") or ""),
-                        alias_text,
-                    ]
-                )
-            )
-
         if product_number_query:
+            query_without_number = re.sub(r"\d+", " ", cleaned_query)
+            query_without_number = " ".join(query_without_number.split())
+
             products_by_number = ShopApiClient.search_products(
                 q=product_number_query,
                 limit=10,
@@ -100,21 +83,19 @@ class ProductService:
             if not exact_number_product:
                 return None
 
-            query_without_number = re.sub(
-                r"\d+",
-                " ",
-                cleaned_query,
-            )
-            query_without_number = " ".join(query_without_number.split())
-
             if not query_without_number:
                 return exact_number_product
 
-            searchable_text = product_search_text(exact_number_product)
-            query_words = query_without_number.split()
+            products_by_text = ShopApiClient.search_products(
+                q=query_without_number,
+                limit=10,
+            )
 
-            if all(word in searchable_text for word in query_words):
-                return exact_number_product
+            for product in products_by_text:
+                product_number = str(product.get("product_number") or "").strip()
+
+                if product_number == product_number_query:
+                    return product
 
             return None
 
@@ -126,13 +107,18 @@ class ProductService:
         normalized_query = cleaned_query.lower()
 
         for product in products:
-            searchable_text = product_search_text(product)
+            name = (product.get("name") or "").lower()
+            slug = (product.get("slug") or "").lower()
             product_number = str(product.get("product_number") or "").lower()
+            series = (product.get("series") or "").lower()
 
-            if normalized_query in searchable_text:
+            if normalized_query in name or normalized_query in slug:
                 return product
 
             if product_number and normalized_query == product_number:
+                return product
+
+            if series and normalized_query in series and len(products) == 1:
                 return product
 
         return products[0]
