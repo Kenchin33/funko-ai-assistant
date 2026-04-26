@@ -1034,28 +1034,63 @@ input {
 html,
 body,
 #root {
-  width: 100%;
   height: 100%;
   margin: 0;
   overflow: hidden;
 }
 
 .chat-shell-widget {
-  width: 100%;
   height: 100vh;
-  max-width: none;
-  border-radius: 0;
-  box-shadow: none;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-shell-widget .chat-body {
   flex: 1;
-  overflow-y: auto;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .chat-shell-widget .chat-footer {
+  flex-shrink: 0;
+  padding: 10px 14px 12px;
+  background: #ffffff;
+}
+
+.chat-shell-widget .quick-actions {
+  padding: 10px 14px;
+  gap: 8px;
+}
+
+.chat-shell-widget .quick-action-btn {
+  padding: 9px 14px;
+  font-size: 15px;
+  border-radius: 13px;
+}
+
+.chat-shell-widget .chat-header {
+  flex-shrink: 0;
+  border-radius: 0 !important;
+}
+
+.chat-shell-widget .chat-header-title {
+  font-size: 28px;
+}
+
+.chat-shell.chat-shell-widget {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-shell-widget .quick-actions,
+.chat-shell-widget .submenu-wrap {
   flex-shrink: 0;
 }
