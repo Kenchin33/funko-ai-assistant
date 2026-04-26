@@ -23,6 +23,7 @@ function MessageActions({ actions }: { actions: ChatReplyAction[] }) {
   function handleActionClick(action: ChatReplyAction) {
   
     if (action.url.startsWith("/")) {
+      console.log("ASSISTANT ACTION URL:", action.url);
       window.parent.postMessage(
         {
           type: "FUNKO_ASSISTANT_NAVIGATE",
