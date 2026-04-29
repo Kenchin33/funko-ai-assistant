@@ -28,28 +28,61 @@ class ChatReplyService:
 
         # ---------------- PRODUCT EXACT ----------------
         if intent == IntentType.PRODUCT_EXACT:
-            product = ProductService.exact_lookup(message_text)
+            products = ProductService.exact_lookup_many(message_text)
 
-            if product:
-                actions = [
-                    {
-                        "type": "link",
-                        "label": "Відкрити товар",
-                        "url": f"/product/{product['slug']}",
+            if products:
+                if len(products) == 1:
+                    product = products[0]
+
+                    actions = [
+                        {
+                            "type": "link",
+                            "label": "Відкрити товар",
+                            "url": f"/product/{product['slug']}",
+                        }
+                    ]
+
+                    reply_text = f"Так, знайшов фігурку:\n{product['name']}"
+
+                    metadata_json = {
+                        "product_slug": product["slug"],
+                        "actions": actions,
                     }
-                ]
+
+                else:
+                    product_number = products[0].get("product_number") or ""
+                    names = "\n".join(
+                        [f"• {product['name']}" for product in products[:5]]
+                    )
+
+                    actions = [
+                        {
+                            "type": "link",
+                            "label": "Переглянути всі результати",
+                            "url": f"/search?q={product_number}",
+                        }
+                    ]
+
+                    reply_text = (
+                        f"Я знайшов кілька фігурок з номером {product_number}:\n"
+                        f"{names}"
+                    )
+
+                    metadata_json = {
+                        "product_number": product_number,
+                        "product_slugs": [product["slug"] for product in products[:10]],
+                        "products_found": len(products),
+                        "actions": actions,
+                    }
 
                 assistant_message = ChatService.create_message(
                     db=db,
                     session_id=session_id,
                     payload=ChatMessageCreate(
                         role="assistant",
-                        message_text=f"Так, знайшов фігурку:\n{product['name']}",
+                        message_text=reply_text,
                         detected_intent="product_exact",
-                        metadata_json={
-                            "product_slug": product["slug"],
-                            "actions": actions,
-                        },
+                        metadata_json=metadata_json,
                     ),
                 )
 
@@ -61,27 +94,6 @@ class ChatReplyService:
                     "matched_intent": "product_exact",
                     "actions": actions,
                 }
-
-            # не знайдено
-            assistant_message = ChatService.create_message(
-                db=db,
-                session_id=session_id,
-                payload=ChatMessageCreate(
-                    role="assistant",
-                    message_text="На жаль, я не знайшов таку фігурку в наявності 😔",
-                    detected_intent="product_exact_not_found",
-                    metadata_json={},
-                ),
-            )
-
-            return {
-                "session_id": session_id,
-                "user_message": user_message,
-                "assistant_message": assistant_message,
-                "matched_faq_id": None,
-                "matched_intent": "product_exact_not_found",
-                "actions": [],
-            }
 
         # ---------------- PRODUCT SEARCH ----------------
         if intent == IntentType.PRODUCT_SEARCH:

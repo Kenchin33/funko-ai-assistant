@@ -125,3 +125,29 @@ class ProductService:
                 return product
 
         return products[0]
+    
+    @staticmethod
+    def exact_lookup_many(query: str) -> list[dict]:
+        cleaned_query = ProductService._clean_search_query(query)
+
+        number_match = re.search(r"\d+", cleaned_query)
+        product_number_query = number_match.group(0) if number_match else None
+
+        if not product_number_query:
+            product = ProductService.exact_lookup(query)
+            return [product] if product else []
+
+        products = ShopApiClient.search_products(
+            q=product_number_query,
+            limit=20,
+        )
+
+        matched_products = []
+
+        for product in products:
+            product_number = str(product.get("product_number") or "").strip()
+
+            if product_number == product_number_query:
+                matched_products.append(product)
+
+        return matched_products
