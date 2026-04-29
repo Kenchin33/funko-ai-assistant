@@ -7,6 +7,7 @@ import ComplaintForm from "./ComplaintForm";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { useLocation } from "react-router-dom";
+import OrderCheckForm from "./OrderCheckForm";
 
 const CHAT_SESSION_KEY = "funko_ai_session_id";
 const CHAT_ENDED_KEY = "funko_ai_chat_ended";
@@ -24,6 +25,7 @@ export default function ChatWindow() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
   const [complaintFormOpen, setComplaintFormOpen] = useState(false);
+  const [orderCheckOpen, setOrderCheckOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -242,6 +244,7 @@ export default function ChatWindow() {
     setSelectedCategory(null);
   }
 
+
   function renderMenu() {
     if (chatEnded) return null;
 
@@ -284,16 +287,28 @@ export default function ChatWindow() {
             key={item.category}
             onClick={() => setSelectedCategory(item.category)}
             className="quick-action-btn"
-            disabled={loading || initializing || complaintFormOpen}
+            disabled={loading || initializing || complaintFormOpen || orderCheckOpen}
           >
             {item.label}
           </button>
         ))}
 
         <button
+          onClick={() => {
+            setOrderCheckOpen(true);
+            setComplaintFormOpen(false);
+            setSelectedCategory(null);
+          }}
+          className="quick-action-btn order-check-btn"
+          disabled={loading || initializing || complaintFormOpen || orderCheckOpen}
+        >
+          Перевірити замовлення
+        </button>
+
+        <button
           onClick={openComplaintForm}
           className="quick-action-btn complaint-btn"
-          disabled={loading || initializing || complaintFormOpen}
+          disabled={loading || initializing || complaintFormOpen || orderCheckOpen}
         >
           Скарга
         </button>
@@ -347,6 +362,28 @@ export default function ChatWindow() {
               </div>
             ) : (
               <MessageList messages={messages} />
+            )}
+
+            {orderCheckOpen && !chatEnded && (
+              <div className="complaint-inline-wrap">
+                <OrderCheckForm
+                  onSuccess={(message) => {
+                    const assistantMessage: ChatMessage = {
+                      id: Date.now(),
+                      session_id: sessionId ?? 0,
+                      role: "assistant",
+                      message_text: message,
+                      detected_intent: "order_check",
+                      metadata_json: null,
+                      created_at: new Date().toISOString(),
+                    };
+
+                    setMessages((prev) => [...prev, assistantMessage]);
+                    setOrderCheckOpen(false);
+                  }}
+                  onCancel={() => setOrderCheckOpen(false)}
+                />
+              </div>
             )}
 
             {complaintFormOpen && !chatEnded && (

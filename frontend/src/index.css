@@ -1094,3 +1094,14 @@ body,
 .chat-shell-widget .submenu-wrap {
   flex-shrink: 0;
 }
+
+.quick-action-btn.order-check-btn {
+  background: linear-gradient(135deg, #5b7cff, #7a5cff);
+  color: white;
+  font-weight: 500;
+  border: none;
+}
+
+.quick-action-btn.order-check-btn:hover {
+  opacity: 0.9;
+}
