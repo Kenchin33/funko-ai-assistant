@@ -56,6 +56,12 @@ def check_order(payload: OrderCheckRequest):
     return {
         "found": True,
         "message": message,
-        "order": order,
-        "order_url": f"http://localhost:5173/orders/{order['order_number']}"
+        "order": {
+            **order,
+            "order_url": (
+                f"/track-order?"
+                f"order_number={order['order_number']}"
+                f"&email={order['email']}"
+            ),
+        },
     }
