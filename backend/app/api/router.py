@@ -12,6 +12,7 @@ from app.api.routes.complaints import (
     router as complaints_router,
 )
 from app.api.routes.widget import router as widget_router
+from app.api.routes import orders
 
 api_router = APIRouter(prefix=settings.API_PREFIX)
 
@@ -24,3 +25,4 @@ api_router.include_router(products_router, tags=["Products"])
 api_router.include_router(complaints_router, tags=["Complaints"])
 api_router.include_router(admin_complaints_router, tags=["Admin Complaints"])
 api_router.include_router(widget_router)
+api_router.include_router(orders.router)

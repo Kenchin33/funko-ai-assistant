@@ -57,3 +57,21 @@ class ShopApiClient:
         )
         response.raise_for_status()
         return response.json()
+    
+    @staticmethod
+    def get_order_status(order_number: str, email: str) -> dict | None:
+        response = requests.get(
+            f"{settings.SHOP_API_BASE_URL}/assistant/orders/status",
+            headers=ShopApiClient._headers(),
+            params={
+                "order_number": order_number,
+                "email": email,
+            },
+            timeout=15,
+        )
+
+        if response.status_code == 404:
+            return None
+        
+        response.raise_for_status()
+        return response.json()
