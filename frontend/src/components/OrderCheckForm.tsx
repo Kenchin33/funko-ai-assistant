@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { checkOrder } from "../api/orderCheckApi";
+import { checkOrder, type OrderCheckResponse } from "../api/orderCheckApi";
 
 interface Props {
-  onSuccess: (message: string) => void;
+  onSuccess: (result: OrderCheckResponse) => void;
   onCancel: () => void;
 }
 
@@ -30,7 +30,7 @@ export default function OrderCheckForm({ onSuccess, onCancel }: Props) {
         email,
       });
 
-      onSuccess(res.message);
+      onSuccess(res);
     } catch (err) {
       console.error(err);
       setError("Помилка перевірки замовлення");

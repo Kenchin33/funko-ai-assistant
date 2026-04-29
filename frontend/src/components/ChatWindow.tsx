@@ -8,6 +8,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { useLocation } from "react-router-dom";
 import OrderCheckForm from "./OrderCheckForm";
+import type { OrderCheckResponse } from "../api/orderCheckApi";
 
 const CHAT_SESSION_KEY = "funko_ai_session_id";
 const CHAT_ENDED_KEY = "funko_ai_chat_ended";
@@ -245,6 +246,39 @@ export default function ChatWindow() {
   }
 
 
+  function handleOrderCheckSuccess(result: OrderCheckResponse) {
+    const actions =
+      result.found && result.order
+        ? [
+            {
+              type: "link",
+              label: "Відкрити замовлення",
+              url: `/orders/${result.order.order_number}`,
+            },
+          ]
+        : [];
+  
+    const assistantMessage: ChatMessage = {
+      id: Date.now(),
+      session_id: sessionId ?? 0,
+      role: "assistant",
+      message_text: result.message,
+      detected_intent: "order_check_result",
+      metadata_json: {
+        actions,
+        order_number: result.order?.order_number,
+      },
+      created_at: new Date().toISOString(),
+    };
+  
+    setMessages((prev) => [...prev, assistantMessage]);
+    setOrderCheckOpen(false);
+    setSelectedCategory(null);
+    setError("");
+  }
+
+
+
   function renderMenu() {
     if (chatEnded) return null;
 
@@ -367,20 +401,7 @@ export default function ChatWindow() {
             {orderCheckOpen && !chatEnded && (
               <div className="complaint-inline-wrap">
                 <OrderCheckForm
-                  onSuccess={(message) => {
-                    const assistantMessage: ChatMessage = {
-                      id: Date.now(),
-                      session_id: sessionId ?? 0,
-                      role: "assistant",
-                      message_text: message,
-                      detected_intent: "order_check",
-                      metadata_json: null,
-                      created_at: new Date().toISOString(),
-                    };
-
-                    setMessages((prev) => [...prev, assistantMessage]);
-                    setOrderCheckOpen(false);
-                  }}
+                  onSuccess={handleOrderCheckSuccess}
                   onCancel={() => setOrderCheckOpen(false)}
                 />
               </div>
@@ -402,7 +423,7 @@ export default function ChatWindow() {
         <div className="chat-footer">
           <MessageInput
             onSend={handleSend}
-            disabled={loading || !sessionId || initializing || complaintFormOpen}
+            disabled={loading || !sessionId || initializing || complaintFormOpen || orderCheckOpen}
           />
           {loading && <p className="chat-status">Асистент думає...</p>}
           {error && <p className="chat-error">{error}</p>}

@@ -1103,5 +1103,6 @@ body,
 }
 
 .quick-action-btn.order-check-btn:hover {
-  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.22);
 }
