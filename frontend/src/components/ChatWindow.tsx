@@ -253,7 +253,7 @@ export default function ChatWindow() {
             {
               type: "link",
               label: "Відкрити замовлення",
-              url: `/orders/${result.order.order_number}`,
+              url: result.order.order_url,
             },
           ]
         : [];
