@@ -29,6 +29,7 @@ export default function ChatWindow() {
   const [orderCheckOpen, setOrderCheckOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const formBottomRef = useRef<HTMLDivElement | null>(null);
 
   const location = useLocation();
   const isWidgetMode = location.pathname === "/widget";
@@ -90,6 +91,14 @@ export default function ChatWindow() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (orderCheckOpen) {
+      setTimeout(() => {
+        formBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
+    }
+  }, [orderCheckOpen]);
 
   const groupedFaq = useMemo(() => {
     const grouped: Record<string, FAQItem[]> = {};
@@ -404,6 +413,7 @@ export default function ChatWindow() {
                   onSuccess={handleOrderCheckSuccess}
                   onCancel={() => setOrderCheckOpen(false)}
                 />
+                <div ref={formBottomRef} />
               </div>
             )}
 

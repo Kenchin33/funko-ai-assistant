@@ -1095,14 +1095,12 @@ body,
   flex-shrink: 0;
 }
 
-.quick-action-btn.order-check-btn {
-  background: linear-gradient(135deg, #5b7cff, #7a5cff);
+.order-check-btn {
+  background: #5b7cff;
   color: white;
-  font-weight: 500;
   border: none;
 }
 
-.quick-action-btn.order-check-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.22);
+.order-check-btn:hover:not(:disabled) {
+  background: #26137d;
 }
