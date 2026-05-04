@@ -256,31 +256,7 @@ export default function ChatWindow() {
 
 
   function handleOrderCheckSuccess(result: OrderCheckResponse) {
-    const actions =
-      result.found && result.order
-        ? [
-            {
-              type: "link",
-              label: "Відкрити замовлення",
-              url: result.order.order_url,
-            },
-          ]
-        : [];
-  
-    const assistantMessage: ChatMessage = {
-      id: Date.now(),
-      session_id: sessionId ?? 0,
-      role: "assistant",
-      message_text: result.message,
-      detected_intent: "order_check_result",
-      metadata_json: {
-        actions,
-        order_number: result.order?.order_number,
-      },
-      created_at: new Date().toISOString(),
-    };
-  
-    setMessages((prev) => [...prev, assistantMessage]);
+    setMessages((prev) => [...prev, result.user_message, result.assistant_message]);
     setOrderCheckOpen(false);
     setSelectedCategory(null);
     setError("");
@@ -407,9 +383,10 @@ export default function ChatWindow() {
               <MessageList messages={messages} />
             )}
 
-            {orderCheckOpen && !chatEnded && (
+            {orderCheckOpen && !chatEnded && sessionId && (
               <div className="complaint-inline-wrap">
                 <OrderCheckForm
+                  sessionId={sessionId}
                   onSuccess={handleOrderCheckSuccess}
                   onCancel={() => setOrderCheckOpen(false)}
                 />

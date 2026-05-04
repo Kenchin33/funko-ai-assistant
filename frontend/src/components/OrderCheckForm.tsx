@@ -2,11 +2,12 @@ import { useState } from "react";
 import { checkOrder, type OrderCheckResponse } from "../api/orderCheckApi";
 
 interface Props {
+  sessionId: number;
   onSuccess: (result: OrderCheckResponse) => void;
   onCancel: () => void;
 }
 
-export default function OrderCheckForm({ onSuccess, onCancel }: Props) {
+export default function OrderCheckForm({ sessionId, onSuccess, onCancel }: Props) {
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
 
@@ -26,6 +27,7 @@ export default function OrderCheckForm({ onSuccess, onCancel }: Props) {
 
     try {
       const res = await checkOrder({
+        sessionId,
         orderNumber,
         email,
       });
